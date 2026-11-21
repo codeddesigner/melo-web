@@ -128,3 +128,15 @@
 @keyframes glow-a { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(14vw, 6vh, 0) scale(1.12); } 100% { transform: translate3d(6vw, -4vh, 0) scale(.96); } }
 @keyframes glow-b { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-12vw, -5vh, 0) scale(1.1); } 100% { transform: translate3d(-4vw, 7vh, 0) scale(1.04); } }
 @media (prefers-reduced-motion: reduce) { .glow-bg::before, .glow-bg::after { animation: none; } }
+
+/* Personal site motion (see usePersonalMotion). Hidden only once JS is ready, so nothing stays invisible without it.
+   Entrances use backwards-filled animations so hover lifts on cards keep working afterwards. */
+@media (prefers-reduced-motion: no-preference) {
+  .pm-on [data-pm]:not(.pm-in), .pm-on [data-pm-stagger]:not(.pm-in) > * { opacity: 0; }
+  .pm-on [data-pm].pm-in { animation: pm-rise .9s cubic-bezier(.22,1,.36,1) backwards; }
+  .pm-on [data-pm-stagger].pm-in > * { animation: pm-rise-sm .7s cubic-bezier(.22,1,.36,1) backwards; animation-delay: calc(var(--pm-i, 0) * 70ms + 60ms); }
+  [data-pm-tilt] { transform-origin: 50% 0; will-change: transform; transition: transform .1s linear; }
+  [data-pm-drift] { will-change: transform; }
+}
+@keyframes pm-rise { from { opacity: 0; transform: translateY(32px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes pm-rise-sm { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

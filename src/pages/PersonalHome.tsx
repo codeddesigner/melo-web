@@ -17,6 +17,7 @@ export default function PersonalHome() {
   const toast = useToast();
   const soon = (what: string) => toast(`${what} is coming soon`, "info");
   useEffect(() => { document.title = "Melo | Relatable Email for the modern world"; window.scrollTo(0, 0); }, []);
+  usePersonalMotion();
   const start = signedIn ? "/app" : personalSignup();
   const startLabel = signedIn ? "Open Melo" : "Get Melo free";
   return (
@@ -32,22 +33,22 @@ export default function PersonalHome() {
             <button type="button" onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth", block: "start" })} className={cx(BTN, "border border-white/50 bg-white/70 text-ink backdrop-blur hover:bg-white")}>See how it works</button>
           </div>
           <p className="mt-7 text-[13px] text-ink-sec">Free forever · No ads · Works with Gmail, Outlook and iCloud</p>
-          <div className="mx-auto mt-7 max-w-[1180px] animate-fade-up [animation-delay:180ms]"><MockWindow view="inbox" /></div>
+          <div className="mx-auto mt-7 max-w-[1180px] animate-fade-up [animation-delay:180ms]"><div data-pm-tilt=""><MockWindow view="inbox" /></div></div>
         </section>
 
         {/* Logos */}
         <section className="flex flex-col items-center gap-6 px-4 py-14 text-ink-3">
           <p className="text-[13px] font-medium">Works with the address you already have</p>
-          <div className="flex flex-wrap justify-center gap-x-[72px] gap-y-3 font-display text-[22px] font-medium opacity-55">{["Gmail", "Outlook", "iCloud Mail", "Yahoo Mail", "Any IMAP"].map((n) => <span key={n}>{n}</span>)}</div>
+          <div data-pm-stagger="" className="flex flex-wrap justify-center gap-x-[72px] gap-y-3 font-display text-[22px] font-medium opacity-55">{["Gmail", "Outlook", "iCloud Mail", "Yahoo Mail", "Any IMAP"].map((n) => <span key={n}>{n}</span>)}</div>
         </section>
 
         {/* Four tabs */}
         <section id="product" className="scroll-mt-24 px-4 py-16 md:px-16 md:py-24">
-          <div className="mx-auto flex max-w-[656px] flex-col items-center gap-[18px] text-center">
+          <div data-pm="" className="mx-auto flex max-w-[656px] flex-col items-center gap-[18px] text-center">
             <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Quiet, without missing a thing.</h2>
             <p className="text-[17px] leading-[1.5] text-ink-sec md:text-[19px]">Melo sorts every email the moment it arrives, so the ones from people are always on top.</p>
           </div>
-          <div className="mx-auto mt-10 grid max-w-[1312px] gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div data-pm-stagger="" className="mx-auto mt-10 grid max-w-[1312px] gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <TabCard bg="#dceeff" title="Primary" body="Mail from people you know, always on top. Everything else waits a tab away." view="inbox" />
             <TabCard bg="#fce2ef" title="Screener" body="First-time senders wait until you say yes. Strangers never reach Primary." view="screener" />
             <TabCard bg="#ddf3e4" title="Later" body="Snooze anything. Newsletters arrive Monday at 8 instead of all week." view="later" />
@@ -58,20 +59,20 @@ export default function PersonalHome() {
         {/* Sorted before you open it */}
         <section id="features" className="scroll-mt-24 px-4 py-10 md:px-16">
           <div className="mx-auto grid max-w-[1312px] items-center gap-10 lg:grid-cols-[480px_1fr] lg:gap-16">
-            <div className="flex flex-col gap-[18px]">
+            <div data-pm="" className="flex flex-col gap-[18px]">
               <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Sorted before<br />you open it.</h2>
               <p className="text-[17px] leading-[1.5] text-ink-sec md:text-[19px]">Newsletters get their own tab, receipts bundle by order and new senders wait in Screener. Nothing is ever deleted.</p>
               <ul className="flex flex-col gap-3 text-[14px] font-medium">{["Newsletters in a calm reading view", "Receipts bundled by order", "Turn any filter off in one tap"].map((t) => <li key={t} className="flex items-center gap-2.5"><Icon name="check" className="size-[18px] text-ok" />{t}</li>)}</ul>
             </div>
-            <div className="rounded-[28px] bg-[#eae4ff] p-6 md:p-10"><div className="overflow-hidden rounded-2xl shadow-pop"><Scaled><PersonalMock view="filters" /></Scaled></div></div>
+            <div data-pm="" className="rounded-[28px] bg-[#eae4ff] p-6 md:p-10"><div data-pm-drift=""><div className="overflow-hidden rounded-2xl shadow-pop"><Scaled><PersonalMock view="filters" /></Scaled></div></div></div>
           </div>
         </section>
 
         {/* Your own address */}
         <section className="px-4 py-10 md:px-16">
           <div className="mx-auto grid max-w-[1312px] items-center gap-10 lg:grid-cols-[1fr_480px] lg:gap-16">
-            <div className="order-2 rounded-[28px] bg-[#ddf3e4] p-6 md:p-10 lg:order-1"><AddressVisual /></div>
-            <div className="order-1 flex flex-col gap-[18px] lg:order-2">
+            <div data-pm="" className="order-2 rounded-[28px] bg-[#ddf3e4] p-6 md:p-10 lg:order-1"><div data-pm-drift=""><AddressVisual /></div></div>
+            <div data-pm="" className="order-1 flex flex-col gap-[18px] lg:order-2">
               <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Your own address.<br />Free forever.</h2>
               <p className="text-[17px] leading-[1.5] text-ink-sec md:text-[19px]">Claim you@melo.to in seconds. Upgrade to Plus to use your own domain, like alex@alexmorgan.com.</p>
               <Link to={start} className="inline-flex w-fit items-center gap-2 rounded-full bg-subtle px-4 py-2.5 text-[14px] font-semibold text-pa-text transition-colors hover:bg-pa-soft"><Icon name="link" className="size-4" />alex@melo.to</Link>
@@ -81,18 +82,18 @@ export default function PersonalHome() {
 
         {/* Testimonial */}
         <section className="mt-16 flex flex-col items-center gap-12 bg-inverse px-6 py-20 text-center md:px-40 md:py-[110px]">
-          <p className="max-w-[1000px] font-display text-[28px] leading-[1.25] font-medium tracking-[-0.01em] text-white md:text-[40px]">“I check email once a day now. Everything that matters is already on top.”</p>
+          <p data-pm="" className="max-w-[1000px] font-display text-[28px] leading-[1.25] font-medium tracking-[-0.01em] text-white md:text-[40px]">“I check email once a day now. Everything that matters is already on top.”</p>
           <div className="flex items-center gap-3 text-left"><span className="flex size-11 items-center justify-center rounded-full bg-white text-[13px] font-semibold text-pa-text">HL</span><span><b className="block text-[14px] font-semibold text-white">Hannah Lind</b><span className="text-[13px] text-white/60">Teacher, Edinburgh</span></span></div>
         </section>
 
         {/* Privacy */}
         <section className="bg-app px-6 py-16 md:px-16 md:py-20">
           <div className="mx-auto flex max-w-[1312px] flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
-            <div className="flex flex-col gap-4 lg:w-[520px]">
+            <div data-pm="" className="flex flex-col gap-4 lg:w-[520px]">
               <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Private by design</h2>
               <p className="text-[18px] leading-[22px] text-ink-sec">Your mail is encrypted at rest and in transit. No ads, ever — we never sell your data or train AI on it.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div data-pm-stagger="" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {([["shield", "No ads, ever"], ["lock", "GDPR & CCPA"], ["users", "Two-factor sign-in"], ["doc", "Encrypted at rest"], ["grid", "Export anytime"], ["lock", "Delete in one click"]] as [IconName, string][]).map(([ic, t]) => (
                 <div key={t} className="flex h-14 items-center gap-2.5 rounded-2xl bg-white px-[18px] text-[13px] font-semibold"><Icon name={ic} className="size-4 text-icon" />{t}</div>
               ))}
@@ -102,11 +103,11 @@ export default function PersonalHome() {
 
         {/* Comparison */}
         <section className="bg-app px-4 pb-16 md:px-[120px] md:pb-[100px]">
-          <div className="mx-auto flex max-w-[620px] flex-col items-center gap-4 pt-4 text-center">
+          <div data-pm="" className="mx-auto flex max-w-[620px] flex-col items-center gap-4 pt-4 text-center">
             <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Why people switch</h2>
             <p className="text-[17px] leading-[22px] text-ink-sec md:text-[19px]">Compared with the free inbox most people use today.</p>
           </div>
-          <div className="mx-auto mt-12 max-w-[1200px] overflow-hidden rounded-[20px] bg-white text-[14px]">
+          <div data-pm-stagger="" className="mx-auto mt-12 max-w-[1200px] overflow-hidden rounded-[20px] bg-white text-[14px]">
             <div className="grid grid-cols-[1fr_90px_110px] items-center bg-subtle px-4 py-[18px] font-semibold md:grid-cols-[1fr_220px_300px] md:px-7"><span /><span className="text-center text-pa-text">Melo</span><span className="text-center text-ink-sec">A typical free inbox</span></div>
             {([["Mail from people always on top", true, false], ["Screener for first-time senders", true, false], ["Newsletters in their own reading view", true, "Partly"], ["Your own @melo.to address", true, "No"], ["No ads in your inbox", true, false], ["Price per month", "$0", "$0 + ads"]] as [string, boolean | string, boolean | string][]).map(([t, a, b]) => (
               <div key={t} className="grid grid-cols-[1fr_90px_110px] items-center border-t border-line px-4 py-[18px] md:grid-cols-[1fr_220px_300px] md:px-7">
@@ -118,11 +119,11 @@ export default function PersonalHome() {
 
         {/* Pricing */}
         <section id="pricing" className="scroll-mt-24 px-4 py-16 md:px-40 md:py-[100px]">
-          <div className="mx-auto flex max-w-[694px] flex-col items-center gap-4 text-center">
+          <div data-pm="" className="mx-auto flex max-w-[694px] flex-col items-center gap-4 text-center">
             <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Free forever. Plus if you want more.</h2>
             <p className="text-[17px] leading-[22px] text-ink-sec md:text-[19px]">Every plan has Screener, smart tabs and no ads.</p>
           </div>
-          <div className="mx-auto mt-12 grid max-w-[1120px] gap-5 md:grid-cols-3">
+          <div data-pm-stagger="" className="mx-auto mt-12 grid max-w-[1120px] gap-5 md:grid-cols-3">
             <Plan name="Free" price="$0" per="forever" blurb="For one calm inbox." cta="Get Melo free" to={start} items={["alex@melo.to address", "Screener and smart tabs", "Connect Gmail, Outlook, iCloud", "15 GB storage"]} />
             <Plan dark name="Plus" badge="Most popular" price="$4" per="per month" blurb="For your own domain and more room." cta="Get Plus" onClick={() => soon("Melo Plus")} items={["Everything in Free", "Your own domain", "Up to 5 addresses and aliases", "100 GB storage", "Unlimited AI summaries"]} />
             <Plan name="Family" price="$8" per="per month · up to 6 people" blurb="For households that share a domain." cta="Start Family" onClick={() => soon("Melo Family")} items={["Everything in Plus", "A shared family domain", "Separate, private inboxes", "One bill for everyone"]} />
@@ -131,13 +132,13 @@ export default function PersonalHome() {
 
         {/* FAQ */}
         <section id="faq" className="scroll-mt-24 px-4 pt-10 pb-16 md:px-[120px] md:pb-[100px]">
-          <h2 className={cx(H2, "text-center text-[36px] leading-[1.08] md:text-[52px]")}>Questions, answered</h2>
+          <h2 data-pm="" className={cx(H2, "text-center text-[36px] leading-[1.08] md:text-[52px]")}>Questions, answered</h2>
           <Faq />
         </section>
 
         {/* CTA band */}
         <section className="px-4 pb-20 md:px-16">
-          <div className="flex flex-col items-center gap-7 rounded-[32px] bg-inverse px-6 py-16 text-center md:py-24">
+          <div data-pm="" className="flex flex-col items-center gap-7 rounded-[32px] bg-inverse px-6 py-16 text-center md:py-24">
             <h2 className="font-display text-balance text-[36px] leading-[1.08] font-medium tracking-[-0.015em] text-white md:text-[52px]">Give your inbox some quiet.</h2>
             <p className="text-[17px] leading-[22px] text-white/90 md:text-[19px]">Claim your free @melo.to address, or bring Gmail, Outlook or iCloud.</p>
             <div className="flex w-full max-w-[360px] flex-col justify-center gap-3 sm:max-w-none sm:w-auto sm:flex-row">
@@ -249,7 +250,7 @@ const QA: [string, string][] = [
 function Faq() {
   const [open, setOpen] = useState(0);
   return (
-    <div className="mx-auto mt-12 max-w-[880px]">
+    <div data-pm-stagger="" className="mx-auto mt-12 max-w-[880px]">
       {QA.map(([q, a], k) => (
         <div key={q} className="border-b border-line">
           <button type="button" aria-expanded={open === k} onClick={() => setOpen(open === k ? -1 : k)} className="flex w-full items-center gap-4 py-[22px] text-left text-[17px] leading-[22px] font-semibold md:text-[19px]">
@@ -276,7 +277,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
       <div className="mx-auto flex max-w-[1312px] flex-col gap-10 md:flex-row md:gap-12">
         <div className="flex flex-col gap-3.5"><img src="/logo-mail.svg" alt="Melo Mail" width={96} height={21} className="h-[21px] w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
         <span className="hidden flex-1 md:block" />
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
+        <div data-pm-stagger="" className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
           {col("Product", [["Primary", go("product")], ["Screener", go("product")], ["Later", go("product")], ["Summaries", go("product")], ["Melo for Business", businessHome()], ["Pricing", go("pricing")]])}
           {col("Company", [["About", () => soon("About")], ["For Business", businessHome()], ["Careers", () => soon("Careers")], ["Blog", () => soon("The blog")], ["Press", () => soon("Press")]])}
           {col("Resources", [["Help center", go("faq")], ["Guides", () => soon("Guides")], ["Status", () => soon("Status")], ["Security", go("features")]])}
@@ -286,4 +287,28 @@ function Footer({ soon }: { soon: (w: string) => void }) {
       <div className="mx-auto mt-12 flex max-w-[1312px] items-center text-[12px] text-ink-3"><button type="button" onClick={top} className="flex-1 text-left">© 2026 Melo, Inc. All rights reserved.</button><span>English · USD</span></div>
     </footer>
   );
+}
+
+/* Motion (same feel as the Business site): sections rise in as they scroll into view, groups stagger,
+   the hero screenshot settles flat as you scroll and the side visuals drift gently. Off when reduced motion is on. */
+function usePersonalMotion() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const root = document.documentElement; root.classList.add("pm-on");
+    const els = [...document.querySelectorAll<HTMLElement>("[data-pm],[data-pm-stagger]")];
+    document.querySelectorAll<HTMLElement>("[data-pm-stagger]").forEach((g) => [...g.children].forEach((c, i) => (c as HTMLElement).style.setProperty("--pm-i", String(Math.min(i, 8)))));
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("pm-in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    els.forEach((e) => io.observe(e));
+    const tilt = document.querySelector<HTMLElement>("[data-pm-tilt]"), drift = [...document.querySelectorAll<HTMLElement>("[data-pm-drift]")];
+    const desk = window.matchMedia("(min-width: 961px)");
+    let ticking = false;
+    const frame = () => {
+      ticking = false; const h = window.innerHeight;
+      if (tilt) { const p = Math.min(1, Math.max(0, window.scrollY / (h * 0.7))); tilt.style.transform = desk.matches ? `perspective(1800px) rotateX(${(8 * (1 - p)).toFixed(2)}deg) scale(${(0.965 + 0.035 * p).toFixed(4)})` : ""; }
+      drift.forEach((v) => { const r = v.parentElement!.getBoundingClientRect(); if (r.bottom < -100 || r.top > h + 100) return; v.style.transform = desk.matches ? `translateY(${(((r.top + r.height / 2 - h / 2) / h) * -24).toFixed(1)}px)` : ""; });
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
+    window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onScroll); frame();
+    return () => { io.disconnect(); root.classList.remove("pm-on"); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, []);
 }
