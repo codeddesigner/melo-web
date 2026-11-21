@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { api, type MailCategory, type MailMessage } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
@@ -209,6 +209,39 @@ function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items:
   );
 }
 
+/* Figma: the summary card at the top of a message — the asks, dates and questions, pulled out of the text */
+export function summarize(body: string): string | null {
+  const text = body.replace(/^>.*$/gm, "").replace(/\s+/g, " ").trim();
+  if (text.length < 160) return null;
+  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z0-9“"])/).map((x) => x.trim()).filter((x) => x.length > 12 && x.length < 260);
+  const score = (x: string) => (/\?/.test(x) ? 3 : 0) + (/\b(can you|could you|please|need|let me know|would you|deadline|asap|by (mon|tue|wed|thu|fri|sat|sun|tomorrow|end of|eod|the)|before (mon|tue|wed|thu|fri|sat|sun|friday|monday))/i.test(x) ? 3 : 0)
+    + (/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|tonight|next week|\d{1,2}(:\d{2})?\s?(am|pm)|\d{1,2}(st|nd|rd|th))\b/i.test(x) ? 2 : 0)
+    + (/[$€£]\s?\d|\d+%|\binvoice|payment|paid|due\b/i.test(x) ? 2 : 0) - (/unsubscribe|view in browser|privacy policy/i.test(x) ? 6 : 0);
+  const picked = sentences.map((x, i) => ({ x, i, s: score(x) })).filter((o) => o.s >= 2).sort((a, b) => b.s - a.s || a.i - b.i).slice(0, 2).sort((a, b) => a.i - b.i).map((o) => o.x);
+  return picked.length ? picked.join(" ") : null;
+}
+function Summary({ m }: { m: MailMessage }) {
+  const s = useMemo(() => summarize(m.body), [m.body]);
+  if (!s) return null;
+  return <div className="mt-5 flex gap-3 rounded-2xl bg-subtle px-4 py-3 text-[13px] leading-5 text-ink-2 animate-fade-up"><Icon name="sparkle" className="mt-0.5 size-4 shrink-0 text-accent" /><span><b className="mr-1 font-medium text-ink">Key points</b>{s}</span></div>;
+}
+function AddToWork({ m }: { m: MailMessage }) {
+  const { ws } = useApp();
+  const toast = useToast();
+  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  useEffect(() => setState("idle"), [m.id]);
+  const add = async () => {
+    setState("busy");
+    try {
+      await api.createTask({ workspace_id: ws.id, title: (m.subject || "Follow up").slice(0, 300), status: "todo", priority: "normal", source: `${(m.from_name || m.from_addr).split(/[\s@]/)[0]}’s email`, source_ref: m.id, tags: [] });
+      setState("done"); toast("Added to Work");
+    } catch (e) { setState("idle"); toast((e as Error).message, "bad"); }
+  };
+  return state === "done"
+    ? <Button variant="soft" size="s" icon="check" onClick={() => navigate("/app/work/mail")}>In Work</Button>
+    : <Button variant="soft" size="s" icon="task" busy={state === "busy"} onClick={add}>Add to Work</Button>;
+}
+
 function ReplyKey({ onReply }: { onReply?: () => void }) {
   useEffect(() => {
     if (!onReply) return;
@@ -265,6 +298,7 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, o
           : <Menu align="left" trigger={(t) => <IconButton icon="clock" label="Snooze" onClick={t} />} items={snoozeOptions().map((o) => ({ label: `${o.label} · ${o.when}`, icon: "clock" as const, onSelect: () => onSnooze(o.at) }))} />)}
         {onMove && <Menu align="left" trigger={(t) => <IconButton icon="filter" label="Move to" onClick={t} />} items={(["primary", "newsletters", "receipts", "updates"] as MailCategory[]).filter((c) => c !== cat(m)).map((c) => ({ label: c === "primary" ? "Move to Primary" : `Move to ${c[0].toUpperCase()}${c.slice(1)}`, icon: "inbox" as const, onSelect: () => onMove(c) }))} />}
         <span className="flex-1" />
+        {!personal && incoming && <AddToWork m={m} />}
         {onReply && <Button size="s" icon="send" onClick={onReply}>Reply</Button>}
         <Button variant="soft" size="s" icon="send" onClick={onForward}>Forward</Button>
       </header>
@@ -279,6 +313,7 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, o
             <p className="truncate text-[13px] text-ink-3">to {m.to_addrs.map(nameFor).join(", ")}</p></div>
           <span className="text-xs text-ink-3">{new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}, {fmtTime(m.created_at)}</span>
         </div>
+        {incoming && <Summary m={m} />}
         {incoming ? <MailBody m={m} /> : <div className="mt-6 whitespace-pre-wrap break-words text-[15px] leading-[24px]">{m.body}</div>}
         {!incoming && <div className="mt-8"><Tag tone="ok" icon="check">Sent from Melo</Tag></div>}
       </div>

@@ -20,10 +20,15 @@ export interface Overview {
   rules: Record<string, boolean>;
 }
 export interface Channel { id: string; workspace_id: string; name: string; topic: string | null; is_private: boolean; dm_users: string[] | null; created_at: string }
-export interface Message { id: string; channel_id: string; workspace_id: string; user_id: string; body: string; created_at: string }
+export interface Message { id: string; channel_id: string; workspace_id: string; user_id: string; body: string; created_at: string; parent_id?: string | null; kind?: "text" | "huddle"; pinned_at?: string | null; pinned_by?: string | null }
+export interface Reaction { message_id: string; user_id: string; emoji: string }
+export interface Project { id: string; workspace_id: string; name: string; color: string; created_at: string }
+export interface BookingLink { id: string; workspace_id: string; user_id: string; slug: string; title: string; duration_min: number; enabled: boolean; description: string | null; location: "video" | "phone" | "in_person"; created_at: string }
+export interface BookingSettings { tz: string; hours: Record<string, [number, number]>; buffer_min: number; notice_min: number }
+export interface BookingPage { owner: string; tz: string; title?: string; duration?: number; description?: string | null; location?: BookingLink["location"]; workspace?: string; slots?: string[]; links?: { slug: string; title: string; duration: number; description: string | null; location: BookingLink["location"] }[] }
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type Priority = "low" | "normal" | "high" | "urgent";
-export interface Task { id: string; workspace_id: string; title: string; status: TaskStatus; priority: Priority; assignee: string | null; due: string | null; tags: string[]; source: string | null; created_by: string | null; created_at: string }
+export interface Task { id: string; workspace_id: string; title: string; status: TaskStatus; priority: Priority; assignee: string | null; due: string | null; tags: string[]; source: string | null; source_ref?: string | null; project_id?: string | null; created_by: string | null; created_at: string }
 export interface CalEvent { id: string; workspace_id: string; user_id: string; title: string; starts_at: string; ends_at: string; color: string; location: string | null }
 export type MailCategory = "primary" | "newsletters" | "receipts" | "updates" | "screener";
 export interface MailMessage { id: string; folder: "inbox" | "sent" | "draft" | "archive" | "trash"; category?: MailCategory; snoozed_until?: string | null; from_addr: string; from_name?: string | null; to_addrs: string[]; subject: string; body: string; html?: string | null; read_at?: string | null; created_at: string }
@@ -150,11 +155,45 @@ export const api = {
   messages: (channel: string, after?: string) =>
     rest<Message[]>("GET", `messages?channel_id=eq.${channel}${after ? `&created_at=gt.${q(after)}` : ""}&order=created_at.asc&limit=300`),
   latestMessages: (ws: string, since: string) => rest<Pick<Message, "channel_id" | "user_id" | "created_at">[]>("GET", `messages?workspace_id=eq.${ws}&created_at=gt.${q(since)}&select=channel_id,user_id,created_at&order=created_at.desc&limit=200`),
-  postMessage: async (ws: string, channel: string, body: string) =>
-    (await rest<Message[]>("POST", "messages", { workspace_id: ws, channel_id: channel, user_id: session?.user.id, body }, "return=representation"))[0],
+  postMessage: async (ws: string, channel: string, body: string, extra: { parent_id?: string; kind?: "huddle" } = {}) =>
+    (await rest<Message[]>("POST", "messages", { workspace_id: ws, channel_id: channel, user_id: session?.user.id, body, ...extra }, "return=representation"))[0],
+  pinned: (channel: string) => rest<Message[]>("GET", `messages?channel_id=eq.${channel}&pinned_at=not.is.null&order=pinned_at.desc&limit=50`),
+  pin: (id: string, on: boolean) => rpc<null>("message_pin", { p_id: id, p_on: on }),
+  reactions: (channel: string) => rest<Reaction[]>("GET", `message_reactions?select=message_id,user_id,emoji,messages!inner(channel_id)&messages.channel_id=eq.${channel}&limit=2000`),
+  react: (message: string, emoji: string, on: boolean) => on
+    ? rest<null>("POST", "message_reactions", { message_id: message, user_id: session?.user.id, emoji }, "resolution=ignore-duplicates,return=minimal")
+    : rest<null>("DELETE", `message_reactions?message_id=eq.${message}&user_id=eq.${session?.user.id}&emoji=eq.${q(emoji)}`),
+  /* Workspace-wide views for Threads / Mentions / Huddles */
+  workspaceMessages: (ws: string, filter: string) => rest<Message[]>("GET", `messages?workspace_id=eq.${ws}&${filter}&order=created_at.desc&limit=200`),
+  /* Chat attachments (private bucket, path starts with the workspace id) */
+  async upload(ws: string, file: File) {
+    await fresh(); if (!session) throw new ApiError("Your session expired. Sign in again.", 401);
+    const path = `${ws}/${crypto.randomUUID()}/${file.name.replace(/[^\w.\- ]+/g, "_").slice(0, 120) || "file"}`;
+    let r: Response;
+    try { r = await fetch(`${URL}/storage/v1/object/attachments/${path.split("/").map(q).join("/")}`, { method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${session.access_token}`, "Content-Type": file.type || "application/octet-stream", "x-upsert": "false" }, body: file }); } catch { throw new ApiError(offline); }
+    if (!r.ok) { const d = await r.json().catch(() => ({})) as { message?: string; error?: string }; throw new ApiError(r.status === 413 ? "That file is over 25 MB." : d.message || d.error || "Upload failed.", r.status); }
+    return path;
+  },
+  async fileUrl(path: string) {
+    await fresh(); if (!session) throw new ApiError("Your session expired. Sign in again.", 401);
+    const d = await request<{ signedURL: string }>(`/storage/v1/object/sign/attachments/${path.split("/").map(q).join("/")}`, { method: "POST", authed: true, body: JSON.stringify({ expiresIn: 600 }) });
+    return URL + "/storage/v1" + d.signedURL;
+  },
   deleteMessage: (id: string) => rest<null>("DELETE", `messages?id=eq.${id}`),
 
   /* work */
+  projects: (ws: string) => rest<Project[]>("GET", `projects?workspace_id=eq.${ws}&order=created_at.asc`),
+  createProject: async (ws: string, name: string, color: string) => (await rest<Project[]>("POST", "projects", { workspace_id: ws, name, color }, "return=representation"))[0],
+  deleteProject: (id: string) => rest<null>("DELETE", `projects?id=eq.${id}`),
+  bookingLinks: () => rest<BookingLink[]>("GET", `booking_links?user_id=eq.${session?.user.id}&order=created_at.asc`),
+  createBookingLink: async (l: Pick<BookingLink, "workspace_id" | "slug" | "title" | "duration_min" | "description" | "location">) => (await rest<BookingLink[]>("POST", "booking_links", { ...l, user_id: session?.user.id }, "return=representation"))[0],
+  updateBookingLink: (id: string, patch: Partial<BookingLink>) => rest<null>("PATCH", `booking_links?id=eq.${id}`, patch, "return=minimal"),
+  bookingCounts: (since: string) => rest<{ link_id: string }[]>("GET", `bookings?select=link_id&created_at=gte.${q(since)}`),
+  bookingSettings: async () => (await rest<BookingSettings[]>("GET", `booking_settings?user_id=eq.${session?.user.id}&select=tz,hours,buffer_min,notice_min`))[0] ?? null,
+  saveBookingSettings: (b: BookingSettings) => rest<null>("POST", "booking_settings?on_conflict=user_id", { ...b, user_id: session?.user.id }, "resolution=merge-duplicates,return=minimal"),
+  deleteBookingLink: (id: string) => rest<null>("DELETE", `booking_links?id=eq.${id}`),
+  bookingPage: (handle: string, slug?: string) => request<BookingPage | null>("/rest/v1/rpc/booking_page", { method: "POST", body: JSON.stringify({ p_handle: handle, p_slug: slug ?? null }) }),
+  bookSlot: (handle: string, slug: string, start: string, name: string, email: string, note: string) => request<{ ok: true; starts_at: string; ends_at: string }>("/rest/v1/rpc/book_slot", { method: "POST", body: JSON.stringify({ p_handle: handle, p_slug: slug, p_start: start, p_name: name, p_email: email, p_note: note }) }),
   tasks: (ws: string) => rest<Task[]>("GET", `tasks?workspace_id=eq.${ws}&order=created_at.desc`),
   createTask: async (t: Partial<Task> & { workspace_id: string; title: string }) => (await rest<Task[]>("POST", "tasks", { ...t, created_by: session?.user.id }, "return=representation"))[0],
   updateTask: async (id: string, patch: Partial<Task>) => (await rest<Task[]>("PATCH", `tasks?id=eq.${id}`, patch, "return=representation"))[0],

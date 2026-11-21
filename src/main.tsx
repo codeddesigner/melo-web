@@ -11,6 +11,7 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const AppRoot = lazy(() => import("./app/AppRoot"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Book = lazy(() => import("./pages/Book"));
 
 function Routes() {
   const { parts, query } = useLocation();
@@ -21,7 +22,7 @@ function Routes() {
   if (top === "index") return null;
   const personalRoot = top === "personal" && parts.length === 1 || onPersonalHost() && top === "";
   const businessRoot = top === "business" && parts.length === 1;
-  const page = personalRoot ? <PersonalHome /> : businessRoot ? <Home /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
+  const page = top === "book" && parts.length >= 2 ? <Book /> : personalRoot ? <PersonalHome /> : businessRoot ? <Home /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
   return <Suspense fallback={<div className="min-h-screen" />}>{page}</Suspense>;
 }
 
