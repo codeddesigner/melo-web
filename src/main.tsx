@@ -2,21 +2,25 @@ import { createRoot } from "react-dom/client";
 import { lazy, Suspense, useEffect } from "react";
 import { navigate, useLocation } from "./lib/router";
 import { ToastProvider } from "./components/ui";
+import { onPersonalHost } from "./lib/site";
 
 const Home = lazy(() => import("./pages/Home"));
+const PersonalOnboarding = lazy(() => import("./personal/Onboarding"));
+const PersonalHome = lazy(() => import("./pages/PersonalHome"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const AppRoot = lazy(() => import("./app/AppRoot"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function Routes() {
-  const { parts } = useLocation();
+  const { parts, query } = useLocation();
   const top = parts[0] ?? "";
   const isApp = top === "app";
   useEffect(() => { document.body.style.background = isApp ? "#f7f7f7" : ""; }, [isApp]);
   useEffect(() => { if (top === "index") navigate("/", { replace: true }); }, [top]);
   if (top === "index") return null;
-  const page = top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? <SignUp /> : isApp ? <AppRoot /> : <NotFound />;
+  const personalRoot = top === "personal" && parts.length === 1 || onPersonalHost() && top === "";
+  const page = personalRoot ? <PersonalHome /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
   return <Suspense fallback={<div className="min-h-screen" />}>{page}</Suspense>;
 }
 

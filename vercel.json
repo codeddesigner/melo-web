@@ -12,21 +12,10 @@
       "has": [
         {
           "type": "host",
-          "value": "melo.to"
-        }
-      ],
-      "destination": "https://business.melo.to/:path*",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
           "value": "www.melo.to"
         }
       ],
-      "destination": "https://business.melo.to/:path*",
+      "destination": "https://melo.to/:path*",
       "permanent": false
     },
     {
@@ -52,7 +41,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|[a-z]+\\.css).*)",
+      "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|wordmark\\.svg|[a-z]+\\.css).*)",
       "destination": "/"
     }
   ],

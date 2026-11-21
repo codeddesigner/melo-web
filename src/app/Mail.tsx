@@ -1,21 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { api, type MailMessage } from "../lib/api";
+import { api, type MailCategory, type MailMessage } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
 import { cx, dayLabel, fmtShort, fmtTime, isEmail } from "../lib/util";
 import { Icon } from "../components/icons";
-import { Avatar, Button, Empty, IconButton, Skeleton, Tag, useAsync, useExitGhost, useToast } from "../components/ui";
+import { Avatar, Button, Empty, IconButton, Menu, Skeleton, Tag, useAsync, useExitGhost, useToast } from "../components/ui";
 import { useApp } from "./context";
 import { Panel, SideItem, SideLabel, SideNav, SideSearch } from "./AppRoot";
 
-type Folder = "inbox" | "sent" | "drafts";
+type Folder = "inbox" | "later" | "newsletters" | "receipts" | "screener" | "updates" | "sent" | "drafts";
+const SORTED: { key: MailCategory; label: string; dot: string; blurb: string }[] = [
+  { key: "newsletters", label: "Newsletters", dot: "#1b87f5", blurb: "Newsletters and digests wait here, out of Primary." },
+  { key: "receipts", label: "Receipts", dot: "#2ea44f", blurb: "Orders, invoices and shipping updates, all in one place." },
+  { key: "screener", label: "Screener", dot: "#5b3fbf", blurb: "First-time senders wait here until you say yes." },
+  { key: "updates", label: "Updates", dot: "#c77700", blurb: "Sign-in alerts, codes and account notices." },
+];
+const INBOXISH = new Set<Folder>(["inbox", "later", "newsletters", "receipts", "screener", "updates"]);
+const snoozed = (m: MailMessage) => Boolean(m.snoozed_until && Date.parse(m.snoozed_until) > Date.now());
+const cat = (m: MailMessage) => m.category ?? "primary";
+/* Snooze presets (Figma: Later → H / T / W / D) */
+export function snoozeOptions(now = new Date()) {
+  const at = (d: Date, h: number) => { const x = new Date(d); x.setHours(h, 0, 0, 0); return x; };
+  const add = (n: number) => { const x = new Date(now); x.setDate(x.getDate() + n); return x; };
+  const later = new Date(now.getTime() + 3 * 3600_000); later.setMinutes(0, 0, 0);
+  const sat = add(((6 - now.getDay() + 7) % 7) || 7), mon = add(((1 - now.getDay() + 7) % 7) || 7);
+  const fmt = (d: Date) => d.toLocaleString("en-US", { weekday: "short", hour: "numeric" });
+  return [
+    { key: "H", label: "Later today", at: later }, { key: "T", label: "Tomorrow", at: at(add(1), 8) },
+    { key: "W", label: "This weekend", at: at(sat, 9) }, { key: "D", label: "Next week", at: at(mon, 8) },
+  ].map((o) => ({ ...o, when: fmt(o.at) }));
+}
 const PROVIDER: Record<string, string> = { google: "Google Workspace", microsoft: "Microsoft 365", imap: "your mail server", melodomain: "your domain" };
 
 export default function Mail() {
   const { account, ws, people, personal } = useApp();
   const { parts } = useLocation();
   const toast = useToast();
-  const folder = (["inbox", "sent", "drafts"].includes(parts[2] ?? "") ? parts[2] : "inbox") as Folder;
+  const folder = (["inbox", "sent", "drafts", ...(personal ? ["later", "newsletters", "receipts", "screener", "updates"] : ["later"])].includes(parts[2] ?? "") ? parts[2] : "inbox") as Folder;
+  const [tab, setTab] = useState<"primary" | "other">("primary");
   const openId = parts[3];
   const [q, setQ] = useState("");
   const [compose, setCompose] = useState<Partial<MailMessage> | null>(null);
@@ -28,22 +50,44 @@ export default function Mail() {
   }, []); // eslint-disable-line
   const drafts = useAsync<MailMessage[]>(() => api.mail("draft"), []);
   const addr = account.profile?.melo_address ? `${account.profile.melo_address}@melo.to` : null;
-  const src = folder === "inbox" ? inbox : folder === "sent" ? sent : drafts;
+  const src = INBOXISH.has(folder) ? inbox : folder === "sent" ? sent : drafts;
   const list = src.data ?? [];
-  const shown = list.filter((m) => !q || `${m.subject} ${m.body} ${m.from_addr} ${m.from_name ?? ""} ${m.to_addrs.join(" ")}`.toLowerCase().includes(q.toLowerCase()));
+  const all = inbox.data ?? [];
+  const awake = all.filter((m) => !snoozed(m));
+  const primary = personal ? awake.filter((m) => cat(m) === "primary") : awake;
+  const other = awake.filter((m) => ["newsletters", "receipts", "updates"].includes(cat(m)));
+  const byCat = (c: MailCategory) => awake.filter((m) => cat(m) === c);
+  const view = folder === "inbox" ? (personal && tab === "other" ? other : primary) : folder === "later" ? all.filter(snoozed).sort((a, b) => Date.parse(a.snoozed_until!) - Date.parse(b.snoozed_until!)) : INBOXISH.has(folder) ? byCat(folder as MailCategory) : list;
+  const shown = view.filter((m) => !q || `${m.subject} ${m.body} ${m.from_addr} ${m.from_name ?? ""} ${m.to_addrs.join(" ")}`.toLowerCase().includes(q.toLowerCase()));
   const open = list.find((m) => m.id === openId);
   const loading = src.loading && !src.data;
-  const unread = (inbox.data ?? []).filter((m) => !m.read_at).length;
+  const unread = primary.filter((m) => !m.read_at).length;
+  const patch = (id: string, p: Partial<MailMessage>) => inbox.set((d) => (d ?? []).map((m) => (m.id === id ? { ...m, ...p } : m)));
   /* Opening an unread message marks it read */
   useEffect(() => {
-    if (!open || folder !== "inbox" || open.read_at) return;
+    if (!open || !INBOXISH.has(folder) || open.read_at) return;
     const at = new Date().toISOString();
     inbox.set((d) => (d ?? []).map((m) => (m.id === open.id ? { ...m, read_at: at } : m)));
     api.markRead(open.id).catch(() => {});
   }, [open?.id]); // eslint-disable-line
   const remove = async (m: MailMessage, to: "archive" | "trash") => {
-    inbox.set((d) => (d ?? []).filter((x) => x.id !== m.id)); navigate("/app/mail/inbox");
+    inbox.set((d) => (d ?? []).filter((x) => x.id !== m.id)); navigate(`/app/mail/${folder}`);
     try { await api.moveMail(m.id, to); toast(to === "archive" ? "Archived" : "Moved to trash"); } catch (e) { toast((e as Error).message, "bad"); inbox.reload(); }
+  };
+  const snooze = async (m: MailMessage, until: Date | null) => {
+    const v = until ? until.toISOString() : null;
+    patch(m.id, { snoozed_until: v }); if (until) navigate(`/app/mail/${folder}`);
+    try { await api.snooze(m.id, v); toast(until ? `Snoozed until ${until.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}` : "Back in your inbox"); } catch (e) { toast((e as Error).message, "bad"); inbox.reload(); }
+  };
+  const recategorize = async (m: MailMessage, c: MailCategory) => {
+    patch(m.id, { category: c });
+    try { await api.setCategory(m.id, c); toast(c === "primary" ? "Moved to Primary" : `Moved to ${c[0].toUpperCase()}${c.slice(1)}`); } catch (e) { toast((e as Error).message, "bad"); inbox.reload(); }
+  };
+  const screen = async (addr: string, status: "allowed" | "blocked") => {
+    const a = addr.toLowerCase();
+    inbox.set((d) => status === "blocked" ? (d ?? []).filter((m) => m.from_addr.toLowerCase() !== a) : (d ?? []).map((m) => (m.from_addr.toLowerCase() === a && cat(m) === "screener" ? { ...m, category: "primary" } : m)));
+    if (open && open.from_addr.toLowerCase() === a) navigate(`/app/mail/${folder}`);
+    try { await api.setSender(a, status); toast(status === "allowed" ? `${addr} can reach your Primary inbox` : `Blocked ${addr}`); } catch (e) { toast((e as Error).message, "bad"); inbox.reload(); }
   };
   const nameFor = (email: string) => people.find((p) => p.email === email || (p.melo_address && `${p.melo_address}@melo.to` === email))?.name || email;
 
@@ -57,12 +101,16 @@ export default function Mail() {
       <SideNav title="Mail" action={<Button size="s" icon="plus" onClick={() => setCompose({})}>Compose</Button>}>
         <SideSearch value={q} onChange={setQ} placeholder="Search mail" />
         <SideItem to="/app/mail/inbox" icon="inbox" label="Inbox" count={unread || undefined} accent active={folder === "inbox"} />
+        <SideItem to="/app/mail/later" icon="clock" label="Later" count={all.filter(snoozed).length || undefined} active={folder === "later"} />
         <SideItem to="/app/mail/sent" icon="send" label="Sent" count={sent.data?.length} active={folder === "sent"} />
         <SideItem to="/app/mail/drafts" icon="doc" label="Drafts" count={drafts.data?.length} active={folder === "drafts"} />
+        {personal && <><SideLabel>Sorted by Melo</SideLabel>
+          {SORTED.map((c) => <SideItem key={c.key} to={`/app/mail/${c.key}`} dot={c.dot} label={c.label} count={byCat(c.key).filter((m) => c.key === "screener" || !m.read_at).length || undefined} active={folder === c.key} />)}</>}
         <SideLabel>Accounts</SideLabel>
         {addr && <SideItem icon="mail" label={addr} onClick={() => navigate("/app/mail/sent")} />}
         {account.email !== addr && <SideItem icon="mail" label={account.email} onClick={() => navigate("/app/mail/inbox")} />}
         <span className="flex-1" />
+        {personal && <SortedCard count={all.filter((m) => cat(m) !== "primary" && Date.now() - Date.parse(m.created_at) < 86400_000).length} />}
         {!personal && <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">
           <Icon name="shield" className="mt-0.5 text-icon" /><span><b className="block font-medium">Workspace rules</b><span className="text-accent-ink">Review what gets filtered</span></span>
         </Link>}
@@ -71,19 +119,27 @@ export default function Mail() {
         <div className={cx("flex min-w-0 flex-col", open ? "hidden w-[420px] border-r border-line lg:flex" : "flex-1")}>
           <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
             <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
+            {personal && folder === "inbox" && <div role="tablist" aria-label="Inbox view" className="flex rounded-full bg-subtle p-0.5 text-[13px] shadow-[inset_0_0_0_1px_var(--color-line)]">
+              {([["primary", "Primary", primary.filter((m) => !m.read_at).length], ["other", "Everything else", other.filter((m) => !m.read_at).length]] as const).map(([k, l, n]) => (
+                <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); if (openId) navigate("/app/mail/inbox"); }} className={cx("flex h-7 items-center gap-1.5 rounded-full px-3", tab === k ? "bg-white font-medium shadow-[0_1px_2px_rgba(0,0,0,.08)]" : "text-ink-2 hover:text-ink")}>{l}{n > 0 && <span className="text-[11px] text-ink-3">{n}</span>}</button>))}
+            </div>}
             <span className="flex-1" />
             <IconButton icon="refresh" label="Refresh" onClick={() => src.reload()} />
           </header>
           <div className="melo-scroll flex-1 overflow-y-auto px-3 pb-6">
             {loading ? <div className="flex flex-col gap-2 px-3"><Skeleton className="h-12" /><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
+              : folder === "screener" && shown.length ? <ScreenerList items={shown} openId={openId} onDecide={screen} />
+              : !["inbox", "sent", "drafts"].includes(folder) && !shown.length && !q ? <Empty icon={folder === "later" ? "clock" : "inbox"} title={folder === "later" ? "Nothing snoozed" : `No ${folder} right now`} body={folder === "later" ? "Snooze a message from the reader and it comes back at the time you pick." : SORTED.find((c) => c.key === folder)?.blurb} />
+              : folder === "inbox" && tab === "other" && !shown.length && !q ? <Empty icon="inbox" title="Nothing else right now" body="Newsletters, receipts and updates land here so Primary stays about people." />
               : folder === "inbox" && !shown.length && !q ? <InboxState addr={addr} provider={ws.mail_provider} email={account.email} personal={personal} onCompose={() => setCompose({})} />
               : !shown.length ? <Empty icon={folder === "sent" ? "send" : "doc"} title={q ? "No mail matches that" : folder === "sent" ? "Nothing sent yet" : "No drafts"}
                   body={folder === "sent" ? (addr ? `Mail you send from ${addr} shows up here.` : "Claim a @melo.to address to send mail from Melo.") : "Close the composer before sending and your draft is saved here."}
                   action={!q && <Button icon="plus" onClick={() => setCompose({})}>Compose</Button>} />
-              : <MailList items={shown} folder={folder} openId={openId} nameFor={nameFor} onDraft={(m) => setCompose(m)} />}
+              : <MailList items={shown} folder={folder} openId={openId} nameFor={nameFor} onDraft={(m) => setCompose(m)} showCat={personal && folder === "inbox" && tab === "other"} />}
           </div>
         </div>
-        {open && folder !== "drafts" && <Reader m={open} nameFor={nameFor} onClose={() => navigate(`/app/mail/${folder}`)}
+        {open && folder !== "drafts" && <Reader m={open} nameFor={nameFor} onClose={() => navigate(`/app/mail/${folder}`)} personal={personal}
+          onSnooze={open.folder === "inbox" ? (d) => snooze(open, d) : undefined} onMove={personal && open.folder === "inbox" ? (c) => recategorize(open, c) : undefined} onScreen={personal && open.folder === "inbox" && cat(open) === "screener" ? (st) => screen(open.from_addr, st) : undefined}
           onForward={() => setCompose({ subject: `Fwd: ${open.subject}`, body: `\n\n---------- Forwarded message ----------\nFrom: ${open.from_name ? `${open.from_name} <${open.from_addr}>` : open.from_addr}\n\n${open.body}` })}
           onReply={open.folder === "inbox" ? () => setCompose({ to_addrs: [open.from_addr], subject: /^re:/i.test(open.subject) ? open.subject : `Re: ${open.subject}`, body: `\n\nOn ${new Date(open.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}, ${open.from_name || open.from_addr} wrote:\n${open.body.split("\n").map((l) => `> ${l}`).join("\n")}` }) : undefined}
           onArchive={open.folder === "inbox" ? () => remove(open, "archive") : undefined} onTrash={open.folder === "inbox" ? () => remove(open, "trash") : undefined} />}
@@ -113,14 +169,14 @@ function InboxState({ addr, provider, email, personal, onCompose }: { addr: stri
   );
 }
 
-function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMessage[]; folder: Folder; openId?: string; nameFor: (e: string) => string; onDraft: (m: MailMessage) => void }) {
+function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items: MailMessage[]; folder: Folder; openId?: string; nameFor: (e: string) => string; onDraft: (m: MailMessage) => void; showCat?: boolean }) {
   let lastDay = "";
   return (
     <div className="flex flex-col">
       {items.map((m) => {
-        const day = dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
+        const day = folder === "later" ? `Back ${dayLabel(m.snoozed_until!).toLowerCase()}` : dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
         const to = m.to_addrs.map(nameFor).join(", ") || "No recipients";
-        const inboxRow = folder === "inbox", unread = inboxRow && !m.read_at;
+        const inboxRow = INBOXISH.has(folder), unread = inboxRow && !m.read_at;
         const who = inboxRow ? (m.from_name || m.from_addr) : `To ${to}`;
         return (
           <div key={m.id}>
@@ -131,9 +187,9 @@ function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMess
               <Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} />
               <span className="min-w-0">
                 <span className="flex items-center gap-2">{unread && <span className="size-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />}<span className={cx("truncate", unread ? "font-semibold" : "font-medium")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
-                <span className="block truncate text-sm"><span className={cx("text-ink", unread && "font-medium")}>{m.subject || "(no subject)"}</span> <span className="text-ink-3">{m.body.slice(0, 120)}</span></span>
+                <span className="block truncate text-sm">{showCat && <span className="mr-1.5 inline-flex rounded-full bg-subtle px-1.5 text-[11px] capitalize text-ink-2 shadow-[inset_0_0_0_1px_var(--color-line)]">{cat(m)}</span>}<span className={cx("text-ink", unread && "font-medium")}>{m.subject || "(no subject)"}</span> <span className="text-ink-3">{m.body.slice(0, 120)}</span></span>
               </span>
-              <span className="text-xs text-ink-3">{fmtShort(m.created_at)}</span>
+              <span className="text-xs text-ink-3">{folder === "later" ? <span className="inline-flex items-center gap-1 text-pa-text"><Icon name="clock" className="size-3" />{fmtTime(m.snoozed_until!)}</span> : fmtShort(m.created_at)}</span>
             </button>
           </div>
         );
@@ -142,7 +198,38 @@ function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMess
   );
 }
 
-function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash }: { m: MailMessage; nameFor: (e: string) => string; onClose: () => void; onForward: () => void; onReply?: () => void; onArchive?: () => void; onTrash?: () => void }) {
+function SortedCard({ count }: { count: number }) {
+  return (
+    <Link to="/app/settings/filters" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">
+      <Icon name="shield" className="mt-0.5 text-icon" /><span><b className="block font-medium">{count} sorted out today</b><span className="text-pa-text">See what Melo moved</span></span>
+    </Link>
+  );
+}
+
+/* Screener: one row per new sender, decide once */
+function ScreenerList({ items, openId, onDecide }: { items: MailMessage[]; openId?: string; onDecide: (addr: string, s: "allowed" | "blocked") => void }) {
+  const senders = [...new Map(items.map((m) => [m.from_addr.toLowerCase(), m])).values()];
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="px-3 pt-1 pb-2 text-[13px] text-ink-3">People emailing you for the first time. Allow them once and they go straight to Primary; block them and they’re gone for good.</p>
+      {senders.map((m) => {
+        const n = items.filter((x) => x.from_addr.toLowerCase() === m.from_addr.toLowerCase()).length;
+        return (
+          <div key={m.from_addr} className={cx("grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 rounded-xl px-3 py-2.5 animate-fade-up sm:grid-cols-[32px_minmax(0,1fr)_auto]", openId === m.id ? "bg-pa-soft" : "hover:bg-hover")}>
+            <Avatar name={m.from_name || m.from_addr} id={m.from_addr} size={32} />
+            <button type="button" className="min-w-0 text-left" onClick={() => navigate(`/app/mail/screener/${m.id}`)}>
+              <span className="block truncate font-medium">{m.from_name || m.from_addr} <span className="font-normal text-ink-3">{m.from_addr}</span></span>
+              <span className="block truncate text-sm text-ink-2">{m.subject || "(no subject)"}{n > 1 && <span className="text-ink-3"> · {n} emails</span>}</span>
+            </button>
+            <span className="col-span-2 flex gap-2 sm:col-span-1"><Button size="s" onClick={() => onDecide(m.from_addr, "allowed")}>Allow sender</Button><Button size="s" variant="soft" onClick={() => onDecide(m.from_addr, "blocked")}>Block</Button></span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, onSnooze, onMove, onScreen, personal }: { m: MailMessage; nameFor: (e: string) => string; onClose: () => void; onForward: () => void; onReply?: () => void; onArchive?: () => void; onTrash?: () => void; onSnooze?: (d: Date | null) => void; onMove?: (c: MailCategory) => void; onScreen?: (s: "allowed" | "blocked") => void; personal?: boolean }) {
   const { account } = useApp();
   const incoming = m.folder === "inbox" || m.folder === "archive";
   const fromName = incoming ? (m.from_name || m.from_addr) : (account.profile?.full_name || m.from_addr);
@@ -152,11 +239,18 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash }:
         <IconButton icon="chev-left" label={`Back to ${incoming ? "Inbox" : "Sent"}`} onClick={onClose} />
         {onArchive && <IconButton icon="archive" label="Archive" onClick={onArchive} />}
         {onTrash && <IconButton icon="trash" label="Delete" onClick={onTrash} className="hover:text-bad" />}
+        {onSnooze && (snoozed(m)
+          ? <Button variant="soft" size="s" icon="clock" onClick={() => onSnooze(null)}>Unsnooze</Button>
+          : <Menu align="left" trigger={(t) => <IconButton icon="clock" label="Snooze" onClick={t} />} items={snoozeOptions().map((o) => ({ label: `${o.label} · ${o.when}`, icon: "clock" as const, onSelect: () => onSnooze(o.at) }))} />)}
+        {onMove && <Menu align="left" trigger={(t) => <IconButton icon="filter" label="Move to" onClick={t} />} items={(["primary", "newsletters", "receipts", "updates"] as MailCategory[]).filter((c) => c !== cat(m)).map((c) => ({ label: c === "primary" ? "Move to Primary" : `Move to ${c[0].toUpperCase()}${c.slice(1)}`, icon: "inbox" as const, onSelect: () => onMove(c) }))} />}
         <span className="flex-1" />
         {onReply && <Button size="s" icon="send" onClick={onReply}>Reply</Button>}
         <Button variant="soft" size="s" icon="send" onClick={onForward}>Forward</Button>
       </header>
       <div className="melo-scroll flex-1 overflow-y-auto px-5 py-6 md:px-8">
+        {onScreen && <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl bg-tag-purple-bg px-4 py-3 text-[13px] animate-fade-up"><Icon name="shield" className="size-4 text-tag-purple" /><span className="min-w-0 flex-1"><b className="font-medium">First email from {m.from_name || m.from_addr}.</b> Let them reach your Primary inbox?</span>
+          <Button size="s" onClick={() => onScreen("allowed")}>Allow sender</Button><Button size="s" variant="soft" onClick={() => onScreen("blocked")}>Block</Button></div>}
+        {personal && snoozed(m) && <p className="mb-4 flex items-center gap-2 text-[13px] text-pa-text"><Icon name="clock" className="size-4" />Snoozed until {new Date(m.snoozed_until!).toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit" })}</p>}
         <h2 className="text-[20px] font-medium">{m.subject || "(no subject)"}</h2>
         <div className="mt-4 flex items-center gap-3">
           <Avatar name={fromName} id={incoming ? m.from_addr : undefined} size={36} dark={!incoming} />

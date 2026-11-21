@@ -6,14 +6,16 @@ import { Icon, type IconName } from "../../components/icons";
 import { Avatar, Button, Empty, Field, IconButton, Input, Menu, Modal, Select, Skeleton, Tag, TextArea, Toggle, useAsync, useConfirm, useToast } from "../../components/ui";
 import { useApp } from "../context";
 import { Panel, SideItem, SideLabel, SideNav } from "../AppRoot";
+import { Body, Card, Header } from "./kit";
+import { CustomDomainPage, FiltersPage, PlanPage } from "./PersonalSettings";
 
-const PAGES = ["profile", "notifications", "general", "members", "rules", "domains", "billing"] as const;
+const PAGES = ["profile", "notifications", "general", "members", "rules", "domains", "billing", "filters", "domain", "plan"] as const;
 type Page = (typeof PAGES)[number];
 
 export default function Settings() {
   const { parts } = useLocation();
   const { ws, isAdmin, personal } = useApp();
-  const allowed = personal ? ["profile", "notifications"] : (PAGES as readonly string[]);
+  const allowed = personal ? ["profile", "notifications", "filters", "domain", "plan"] : ["profile", "notifications", "general", "members", "rules", "domains", "billing"];
   const page = allowed.includes(parts[2] ?? "") ? (parts[2] as Page) : null;
   useEffect(() => { if (!page) navigate("/app/settings/profile", { replace: true }); }, [page]);
   const ov = useAsync<Overview>(() => (personal ? Promise.resolve(undefined as unknown as Overview) : api.overview(ws.id)), [ws.id, personal]);
@@ -25,6 +27,10 @@ export default function Settings() {
         {item("profile", "user", "Profile")}
         {item("notifications", "bell", "Notifications")}
         {personal ? <>
+          {item("filters", "filter", "Filters")}
+          <SideLabel>Mail</SideLabel>
+          {item("domain", "link", "Custom domain")}
+          {item("plan", "bolt", "Plan")}
           <SideLabel>Business</SideLabel>
           <SideItem to="/signup?resume=1" icon="plus" label="Create a business workspace" />
           <p className="px-2.5 pt-1 text-xs text-ink-3">Add team chat, shared tasks, members and your company domain. Your personal mail stays yours.</p>
@@ -46,22 +52,14 @@ export default function Settings() {
           {page === "rules" && <RulesPage ov={ov.data} set={ov.set} isAdmin={isAdmin} />}
           {page === "domains" && <DomainsPage ov={ov.data} reload={ov.reload} />}
           {page === "billing" && <BillingPage />}
+          {page === "filters" && <FiltersPage />}
+          {page === "domain" && <CustomDomainPage />}
+          {page === "plan" && <PlanPage />}
         </div>
       </Panel>
     </>
   );
 }
-
-function Header({ title, sub, action }: { title: string; sub?: ReactNode; action?: ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 px-6 pt-8 pb-6 md:px-10">
-      <div><h2 className="text-[22px] font-medium tracking-[-.2px]">{title}</h2>{sub && <p className="mt-1.5 max-w-2xl text-sm text-ink-2">{sub}</p>}</div>
-      {action}
-    </div>
-  );
-}
-const Card = ({ children, className }: { children: ReactNode; className?: string }) => <div className={cx("rounded-2xl border border-line bg-white", className)}>{children}</div>;
-const Body = ({ children }: { children: ReactNode }) => <div className="flex flex-col gap-6 px-6 pb-12 md:px-10">{children}</div>;
 
 /* ---------------- Profile ---------------- */
 function ProfilePage() {

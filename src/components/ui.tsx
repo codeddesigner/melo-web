@@ -223,7 +223,7 @@ function MenuList({ items, align, close }: { items: { label: string; icon?: Icon
     <div ref={ref} role="menu" className={cx("absolute top-full z-40 mt-1 min-w-[180px] origin-top rounded-2xl bg-white p-1.5 shadow-pop animate-pop", align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left")}>
       {items.map((it) => (
         <button key={it.label} role="menuitem" type="button" disabled={it.disabled} onClick={() => { close(); it.onSelect(); }}
-          className={cx("flex h-8 w-full items-center gap-2 rounded-xl px-2.5 text-left text-sm hover:bg-hover disabled:opacity-40", it.danger && "text-bad hover:bg-bad-soft")}>
+          className={cx("flex h-8 w-full items-center gap-2 whitespace-nowrap rounded-xl px-2.5 text-left text-sm hover:bg-hover disabled:opacity-40", it.danger && "text-bad hover:bg-bad-soft")}>
           {it.icon && <Icon name={it.icon} />}{it.label}
         </button>
       ))}

@@ -40,6 +40,7 @@ export function dayLabel(d: Date | string) {
   const t = new Date(d), now = new Date();
   if (sameDay(t, now)) return "Today";
   if (sameDay(t, addDays(now, -1))) return "Yesterday";
+  if (sameDay(t, addDays(now, 1))) return "Tomorrow";
   return t.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 }
 export function dueLabel(s: string | null) {

@@ -25,7 +25,8 @@ export type TaskStatus = "todo" | "in_progress" | "done";
 export type Priority = "low" | "normal" | "high" | "urgent";
 export interface Task { id: string; workspace_id: string; title: string; status: TaskStatus; priority: Priority; assignee: string | null; due: string | null; tags: string[]; source: string | null; created_by: string | null; created_at: string }
 export interface CalEvent { id: string; workspace_id: string; user_id: string; title: string; starts_at: string; ends_at: string; color: string; location: string | null }
-export interface MailMessage { id: string; folder: "inbox" | "sent" | "draft" | "archive" | "trash"; from_addr: string; from_name?: string | null; to_addrs: string[]; subject: string; body: string; html?: string | null; read_at?: string | null; created_at: string }
+export type MailCategory = "primary" | "newsletters" | "receipts" | "updates" | "screener";
+export interface MailMessage { id: string; folder: "inbox" | "sent" | "draft" | "archive" | "trash"; category?: MailCategory; snoozed_until?: string | null; from_addr: string; from_name?: string | null; to_addrs: string[]; subject: string; body: string; html?: string | null; read_at?: string | null; created_at: string }
 export interface SecurityInfo { password_account: boolean; recovery_email: string | null; sign_in_email: string }
 
 export class ApiError extends Error { constructor(message: string, public status = 0, public code?: string) { super(message); } }
@@ -124,6 +125,7 @@ export const api = {
     ]);
     return { email: session.user.email, profile: profiles[0] ?? null, workspaces: members.filter((m) => m.workspaces).map((m) => ({ ...m.workspaces!, role: m.role })) };
   },
+  ensurePersonalSpace: () => rpc<string>("ensure_personal_space"),
   updateProfile: (patch: Partial<Pick<Profile, "full_name" | "display_name" | "title" | "prefs" | "melo_address">>) =>
     rest<null>("PATCH", `profiles?id=eq.${session?.user.id}`, patch, "return=minimal"),
 
@@ -164,7 +166,7 @@ export const api = {
   deleteEvent: (id: string) => rest<null>("DELETE", `events?id=eq.${id}`),
 
   /* mail */
-  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}&select=id,folder,from_addr,from_name,to_addrs,subject,body,read_at,created_at&order=created_at.desc&limit=200`),
+  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}&select=id,folder,category,snoozed_until,from_addr,from_name,to_addrs,subject,body,read_at,created_at&order=created_at.desc&limit=200`),
   mailHtml: async (id: string) => (await rest<{ html: string | null }[]>("GET", `mail_messages?id=eq.${id}&select=html`))[0]?.html ?? null,
   markRead: (id: string, read = true) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { read_at: read ? new Date().toISOString() : null }, "return=minimal"),
   moveMail: (id: string, folder: MailMessage["folder"]) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { folder }, "return=minimal"),
@@ -172,6 +174,18 @@ export const api = {
   saveDraft: async (d: { id?: string; to: string[]; subject: string; body: string; from: string; ws?: string }) => d.id
     ? (await rest<MailMessage[]>("PATCH", `mail_messages?id=eq.${d.id}`, { to_addrs: d.to, subject: d.subject, body: d.body }, "return=representation"))[0]
     : (await rest<MailMessage[]>("POST", "mail_messages", { user_id: session?.user.id, workspace_id: d.ws ?? null, folder: "draft", from_addr: d.from, to_addrs: d.to, subject: d.subject, body: d.body }, "return=representation"))[0],
+  snooze: (id: string, until: string | null) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { snoozed_until: until }, "return=minimal"),
+  setCategory: (id: string, category: MailCategory) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { category }, "return=minimal"),
+  /* Screener: allow or block a sender; everything they've already sent follows */
+  senders: () => rest<{ address: string; status: "allowed" | "blocked"; created_at?: string }[]>("GET", "mail_senders?select=address,status&order=address.asc"),
+  async setSender(address: string, status: "allowed" | "blocked" | null) {
+    const a = address.toLowerCase();
+    if (status === null) return rest<null>("DELETE", `mail_senders?address=eq.${q(a)}`);
+    await rest<null>("POST", "mail_senders?on_conflict=user_id,address", { user_id: session?.user.id, address: a, status }, "resolution=merge-duplicates,return=minimal");
+    if (status === "allowed") await rest<null>("PATCH", `mail_messages?from_addr=eq.${q(a)}&category=eq.screener&folder=eq.inbox`, { category: "primary" }, "return=minimal");
+    else await rest<null>("PATCH", `mail_messages?from_addr=eq.${q(a)}&folder=eq.inbox`, { folder: "trash" }, "return=minimal");
+    return null;
+  },
   deleteMail: (id: string) => rest<null>("DELETE", `mail_messages?id=eq.${id}`),
 
   /* public DNS lookups (domain setup) */

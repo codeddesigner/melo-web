@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, navigate } from "../lib/router";
 import { Icon, type IconName } from "../components/icons";
+import { SiteToggle } from "./SiteToggle";
 
 type Feature = [IconName, string, string, string, string]; // icon, bg, fg, title, desc
 const F = (href: string, [icon, bg, fg, title, desc]: Feature, onPick: () => void, demo?: boolean) => (
@@ -102,6 +103,7 @@ export function Header({ signedIn, onDemo }: { signedIn: boolean; onDemo: () => 
             ))}
           </ul>
           <span className="nav-spacer" />
+          <SiteToggle current="business" dark className="mr-2 hidden xl:grid" />
           {ctas}
           <button type="button" className="nav-toggle" aria-label="Open menu" aria-expanded={mobile} onClick={() => setMobile(true)}><Icon name="menu" className="icon" /></button>
         </nav>
@@ -110,6 +112,7 @@ export function Header({ signedIn, onDemo }: { signedIn: boolean; onDemo: () => 
         <div className="mm-head"><span className="logo"><img src="/logo.svg" alt="Melo business" width={150} height={30} className="logo-img" /></span>
           <button type="button" className="mm-close" aria-label="Close menu" onClick={() => setMobile(false)}><Icon name="x" className="icon" /></button></div>
         <div className="mm-list">
+          <SiteToggle current="business" className="mb-3 w-full" />
           {([["Product", [["/product", "mail", "Mail", "Split inbox and AI summaries"], ["/product", "users", "Team", "Channels, DMs and huddles"], ["/product", "task", "Work", "Tasks, projects and tags"], ["/booking", "calendar", "Calendar", "Your week plus booking links"], ["/rules", "shield", "Workspace rules", "Filter the noise for everyone"]]],
             ["Solutions", [["/product", "settings", "Operations", "Quiet inboxes, clear owners"], ["/product", "star", "Agencies", "Client mail, chat and booking"], ["/booking", "bolt", "Sales", "Book meetings, track every thread"]]],
             ["Resources", [["/faq", "doc", "Help center", "Answers in minutes"], ["/rules", "board", "Guides", "Set up rules, migrate mail"]]]] as [string, [string, IconName, string, string][]][]).map(([sec, rows]) => (

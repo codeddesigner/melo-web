@@ -38,6 +38,22 @@ const textFromHtml = (html: string) => html.replace(/<style[\s\S]*?<\/style>/gi,
   .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|tr|li|h\d)>/gi, "\n").replace(/<[^>]+>/g, "")
   .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
   .replace(/\n{3,}/g, "\n\n").trim();
+/* Where Melo files a message. People you know stay in Primary; the rest is sorted, never deleted. */
+type Prefs = { filters?: { newsletters?: boolean; receipts?: boolean; updates?: boolean; screener?: boolean; senders?: { match: string; to: string; on?: boolean }[] } };
+const NEWS = /(newsletter|digest|weekly|news@|noreply|no-reply|donotreply|marketing|promo|offers|deals@|hello@|team@|updates@|info@|mailer|substack|mailchimp|beehiiv)/i;
+const RECEIPT = /(receipt|invoice|your order|order (confirmed|#|no)|payment (received|confirmation)|paid|purchase|shipped|shipping|delivery|booking confirm|reservation confirm|statement)/i;
+const UPDATE = /(security alert|new sign-?in|verify|verification|password|one-time|your code|is your .* code|login|notification|reminder|account update)/i;
+function classify(from: string, subject: string, text: string, prefs: Prefs, status: string | null, me: string) {
+  const f = prefs.filters ?? {};
+  const rule = (f.senders ?? []).find((r) => r.on !== false && r.match && from.includes(r.match.toLowerCase()));
+  if (rule) return rule.to === "primary" ? "primary" : rule.to === "screener" ? "screener" : rule.to === "receipts" ? "receipts" : rule.to === "updates" ? "updates" : "newsletters";
+  if (status === "allowed" || from.endsWith("@melo.to") && from.split("@")[0] === me) return "primary";
+  if (f.newsletters !== false && (NEWS.test(from) || /unsubscribe/i.test(text.slice(-3000)))) return "newsletters";
+  if (f.receipts !== false && RECEIPT.test(subject)) return "receipts";
+  if (f.updates !== false && UPDATE.test(subject)) return "updates";
+  if (f.screener === true && status !== "allowed") return "screener";
+  return "primary";
+}
 const list = (v: unknown): string[] => Array.isArray(v) ? v.map((x) => typeof x === "string" ? x : String((x as { email?: string; address?: string })?.email ?? (x as { address?: string })?.address ?? "")) : typeof v === "string" ? v.split(",") : [];
 
 Deno.serve(async (req) => {
@@ -79,8 +95,15 @@ Deno.serve(async (req) => {
     if (prof) owner = prof.id;
     else { const { data: alias } = await admin.from("mail_aliases").select("user_id").eq("address", local).maybeSingle(); owner = alias?.user_id ?? null; }
     if (!owner) { console.log("no mailbox for", rcpt); continue; }
+    const sender = addrOf(from);
+    const [{ data: owned }, { data: known }] = await Promise.all([
+      admin.from("profiles").select("prefs, melo_address").eq("id", owner).maybeSingle(),
+      admin.from("mail_senders").select("status").eq("user_id", owner).eq("address", sender).maybeSingle(),
+    ]);
+    const status = known?.status ?? null;
+    const category = classify(sender, subject, text, (owned?.prefs ?? {}) as Prefs, status, owned?.melo_address ?? "");
     const { error } = await admin.from("mail_messages").insert({
-      user_id: owner, folder: "inbox", from_addr: addrOf(from) || "unknown", from_name: nameOf(from),
+      user_id: owner, folder: status === "blocked" ? "trash" : "inbox", category, from_addr: sender || "unknown", from_name: nameOf(from),
       to_addrs: recipients, subject: subject.slice(0, 500), body: text.slice(0, 200_000), html: html ? html.slice(0, 1_000_000) : null,
       message_id: pick("message_id") || null, provider_id: emailId || null, created_at,
     });

@@ -34,3 +34,6 @@
 .hero-ctas { gap: 8px; }
 .mm-cta .btn { height: 40px; }
 @media (max-width: 960px) { .hero-ctas .btn-lg { height: 40px; } }
+/* Personal ⇄ Business toggle: white text over the blue hero, dark once the header turns white */
+.site-header:not(.scrolled) .site-toggle a:not([aria-current]) { color: #fff !important; }
+.site-header:not(.scrolled) .site-toggle { background: rgba(255,255,255,.18) !important; }
