@@ -1,5 +1,7 @@
-/* Onboarding — Figma “Onboarding · 1–7”. Ways in: work email, or a free @melo.to address.
-   A workspace can be created (with or without a company domain) or joined from an invite. */
+/* Onboarding — Figma “Onboarding · 1–7”.
+   Personal Melo Mail: pick a @melo.to address + password — no other email needed — and land in Mail.
+   Business: start from an email you already have (we send a code), or create a @melo.to address first;
+   then create a workspace (with or without a company domain) or join one from an invite. */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, auth, type MailProvider, type Role } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
@@ -14,7 +16,7 @@ const PUBLIC = /@(gmail|googlemail|yahoo|ymail|hotmail|outlook|live|msn|icloud|m
 const token = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, "0")).join("");
 
 interface State {
-  path: "work" | "melo"; name: string; email: string; alt: string; user: string; codeTo: "email" | "alt";
+  path: "work" | "melo"; personal: boolean; name: string; email: string; alt: string; user: string; codeTo: "email" | "alt";
   join: boolean; invite: string; ws: string; slug: string; domainMode: "domain" | "none" | null; domain: string; size: string;
   mail: MailProvider | null; hasMail: boolean | null; registrar: string; dnsFound: boolean; dnsChecked: boolean; token: string;
   invites: string[]; role: Role; rules: Record<"digests" | "random" | "invites", boolean>;
@@ -24,7 +26,7 @@ export default function SignUp() {
   const { query } = useLocation();
   const session = useSession();
   const [s, setS] = useState<State>(() => ({
-    path: "work", name: "", email: "", alt: "", user: "", codeTo: "email", join: Boolean(query.get("join")), invite: (query.get("join") ?? "").slice(0, 200),
+    path: "work", personal: false, name: "", email: "", alt: "", user: "", codeTo: "email", join: Boolean(query.get("join")), invite: (query.get("join") ?? "").slice(0, 200),
     ws: "", slug: "", domainMode: null, domain: "", size: "11–50", mail: null, hasMail: null, registrar: "", dnsFound: false, dnsChecked: false, token: token(),
     invites: [], role: "member", rules: { digests: true, random: true, invites: false },
   }));
@@ -37,14 +39,15 @@ export default function SignUp() {
   /* Entry points: ?start=melo, ?email= (from sign-in), signed in already (?resume / ?join), or a visitor who's already signed in */
   useEffect(() => {
     const pre = (query.get("email") ?? "").trim().toLowerCase();
-    if (session && (query.get("resume") || query.get("join"))) { setS((x) => ({ ...x, path: "work", email: session.user.email })); hist.current = []; setStep("workspace"); return; }
+    if (session && (query.get("resume") || query.get("join"))) { setS((x) => ({ ...x, path: session.user.email.endsWith("@melo.to") ? "melo" : "work", email: session.user.email })); hist.current = []; setStep("workspace"); return; }
     if (session) { navigate("/app", { replace: true }); return; }
-    if (query.get("start") === "melo") { up({ path: "melo" }); hist.current = ["signup"]; setStep("claim"); return; }
+    if (query.get("start") === "personal") { up({ path: "melo", personal: true }); hist.current = []; setStep("claim"); return; }
+    if (query.get("start") === "melo") { up({ path: "melo", personal: false }); hist.current = ["signup"]; setStep("claim"); return; }
     if (pre && isEmail(pre) && !pre.endsWith("@melo.to")) { up({ path: "work", email: pre }); hist.current = ["signup"]; setStep("verify"); }
   }, []); // eslint-disable-line
 
   const wd = s.path === "work" && s.email && !PUBLIC.test(s.email) && !s.email.endsWith("@melo.to") ? s.email.split("@")[1] : "";
-  const titles: Record<Step, string> = { signup: "Create your account", claim: "Get your Melo address", verify: "Verify", alt: "Verify", workspace: "Create your workspace", connect: "Connect email", dns: "Connect your domain", invite: "Invite your team", rules: "Workspace rules", done: "Welcome" };
+  const titles: Record<Step, string> = { signup: "Create your account", claim: s.personal ? "Create your Melo Mail" : "Get your Melo address", verify: "Verify", alt: "Verify", workspace: "Create your workspace", connect: "Connect email", dns: "Connect your domain", invite: "Invite your team", rules: "Workspace rules", done: "Welcome" };
   useEffect(() => { document.title = `${titles[step]} — Melo`; }, [step]); // eslint-disable-line
   const n = ORDER[step];
   const props = { s, up, go, back, canBack: hist.current.length > 0, wd, step, n };
@@ -75,16 +78,17 @@ function In({ id, label, value, onChange, fix, fixLeft, ...rest }: { id: string;
 /* 1 — sign up */
 function SignupStep(p: P) {
   const [v, setV] = useState(p.s.email);
-  const [err, setErr] = useState("");
+  const [err, setErr] = useState<ReactNode>("");
   const pv = { grad: "blue" as Grad, preview: <><InboxPreview /><Msg h="Your inbox, your channels, one place" p="Melo for Business brings email and team chat together — with rules that keep the noise out." /></> };
   return <Frame p={p} {...pv}><>
-    <Title h="Create your account" p="Email, chat and your team’s rules — in one calm workspace." />
-    <form className="su-content" style={{ width: "100%", gap: 20 }} noValidate onSubmit={(e) => { e.preventDefault(); if (!isEmail(v)) return setErr("Enter a valid email address."); p.up({ path: "work", email: v.trim().toLowerCase(), codeTo: "email", mail: null }); p.go("verify"); }}>
-      <In id="su-email" label="Work email" type="email" autoComplete="email" placeholder="alex@acme.com" value={v} onChange={(x) => { setV(x); setErr(""); }} bad={Boolean(err)} autoFocus />
-      <Err msg={err} /><button className="su-btn dark" type="submit">Continue</button>
+    <Title h="Create your business account" p="Start with an email you already have, or create a free @melo.to address — then set up your workspace." />
+    <form className="su-content" style={{ width: "100%", gap: 20 }} noValidate onSubmit={(e) => { e.preventDefault(); const x = v.trim().toLowerCase(); if (!isEmail(x)) return setErr("Enter a valid email address."); if (x.endsWith("@melo.to")) return setErr(<>Already have a Melo address? <Link className="su-a" to={`/signin?email=${encodeURIComponent(x)}`}>Sign in</Link> and create your workspace from there.</>); p.up({ path: "work", personal: false, email: x, codeTo: "email", mail: null }); p.go("verify"); }}>
+      <In id="su-email" label="Use an email you already have" type="email" autoComplete="email" placeholder="alex@acme.com or you@gmail.com" value={v} onChange={(x) => { setV(x); setErr(""); }} bad={Boolean(err)} autoFocus />
+      <Err msg={err} /><button className="su-btn dark" type="submit">Continue with email</button>
     </form>
-    <button type="button" className="su-alt" onClick={() => { p.up({ path: "melo" }); p.go("claim"); }}><span className="ic"><Mark /></span><span><b>No work email? Get a free @melo.to address</b><small>Use Melo Mail for your work. Add a work email any time.</small></span><Icon name="chev-right" className="icon" /></button>
-    <p className="su-meta">Already have an account? <Link className="su-a" to="/signin">Sign in</Link></p>
+    <div className="su-or"><span>or</span></div>
+    <button type="button" className="su-alt" onClick={() => { p.up({ path: "melo", personal: false }); p.go("claim"); }}><span className="ic"><Mark /></span><span><b>Create a free @melo.to address</b><small>No other email needed. Use it for your work, then add a company domain any time.</small></span><Icon name="chev-right" className="icon" /></button>
+    <p className="su-meta">Just want personal email? <Link className="su-a" to="/signup?start=personal">Get Melo Mail free</Link> · Already have an account? <Link className="su-a" to="/signin">Sign in</Link></p>
     <p className="su-meta small">By continuing you agree to Melo’s Terms and Privacy Policy.</p>
   </></Frame>;
 }
@@ -92,7 +96,7 @@ function SignupStep(p: P) {
 /* 1b — claim a @melo.to address */
 function ClaimStep(p: P) {
   const { s } = p;
-  const [name, setName] = useState(s.name), [user, setUser] = useState(s.user), [alt, setAlt] = useState(s.alt);
+  const [name, setName] = useState(s.name), [user, setUser] = useState(s.user), [pw, setPw] = useState(""), [show, setShow] = useState(false);
   const [touched, setTouched] = useState(Boolean(s.user));
   const [avail, setAvail] = useState<{ u: string; ok: boolean | null; msg: ReactNode }>({ u: "", ok: null, msg: "" });
   const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
@@ -104,29 +108,34 @@ function ClaimStep(p: P) {
     const t = setTimeout(() => api.addressAvailable(u).then((ok) => setAvail({ u, ok, msg: ok ? <><Icon name="check" className="icon" />{u}@melo.to is available</> : <>{u}@melo.to isn’t available. <button type="button" className="su-a" onClick={() => { setUser(`${u}${Math.floor(10 + Math.random() * 89)}`); setTouched(true); }}>Try another</button></> }), (e: Error) => setAvail({ u, ok: false, msg: e.message })), 300);
     return () => clearTimeout(t);
   }, [u]);
-  const pv = { grad: "blue" as Grad, preview: <><div className="pv-card pv-code pv-addr"><div className="env"><Icon name="mail" className="icon" /></div><h5>Your Melo address</h5><div className="big">{u || "you"}<span>@melo.to</span></div><small style={{ display: "block", marginTop: 8, fontSize: 12, color: "var(--text-tertiary)" }}>Free · Reserved for you when you finish sign-up</small></div><Msg h="Work email, without the IT ticket" p="Start on Melo Mail today. When your team gets a domain, move to you@yourcompany.com in a few clicks." /></> };
+  const pv = { grad: "blue" as Grad, preview: <><div className="pv-card pv-code pv-addr"><div className="env"><Icon name="mail" className="icon" /></div><h5>Your Melo address</h5><div className="big">{u || "you"}<span>@melo.to</span></div><small style={{ display: "block", marginTop: 8, fontSize: 12, color: "var(--text-tertiary)" }}>Free · Reserved for you when you finish sign-up</small></div>{s.personal ? <Msg h="Email that’s yours from day one" p="No phone number, no other inbox needed. Send and receive at your @melo.to address straight away." /> : <Msg h="Work email, without the IT ticket" p="Start on Melo Mail today. When your team gets a domain, move to you@yourcompany.com in a few clicks." />}</> };
+  const strength = pw.length >= 12 && /[^a-z]/i.test(pw) ? "Strong password" : pw.length >= 8 ? "Good — longer is stronger" : pw ? `${8 - pw.length} more character${8 - pw.length === 1 ? "" : "s"}` : "";
   const submit = async () => {
-    if (!name.trim()) return setErr("Enter your name.");
-    const a = alt.trim().toLowerCase();
-    if (!isEmail(a)) return setErr("Enter a personal email so we can send you a code.");
-    if (a.endsWith("@melo.to")) return setErr("Use an email you already have, not a melo.to address.");
-    setBusy(true);
+    if (name.trim().length < 2) return setErr("Enter your name.");
+    if (pw.length < 8) return setErr("Use at least 8 characters for your password.");
+    setBusy(true); setErr("");
     const ok = avail.u === u && avail.ok ? true : await api.addressAvailable(u).catch(() => false);
-    setBusy(false);
-    if (!ok) return setErr("Choose an available address.");
-    p.up({ name: name.trim(), user: u, alt: a, email: `${u}@melo.to`, mail: "melo", codeTo: "alt" }); p.go("verify");
+    if (!ok) { setBusy(false); return setErr("Choose an available address."); }
+    try {
+      await api.meloSignup({ name: name.trim(), address: u, password: pw, personal: s.personal });
+      p.up({ name: name.trim(), user: u, email: `${u}@melo.to`, mail: "melo" });
+      if (s.personal) navigate("/app/mail?welcome=1", { replace: true }); else p.go("workspace");
+    } catch (e) { setErr((e as Error).message); setBusy(false); }
   };
   return <Frame p={p} {...pv}><>
-    <Title h="Get your Melo address" p="A free work address on Melo Mail. You can connect a company email or domain later." />
+    <Title h={s.personal ? "Create your Melo Mail" : "Create your Melo address"} p={s.personal ? "A free @melo.to email address — no other email needed. Pick an address and a password." : "No other email needed. You’ll use this address to sign in, then set up your workspace."} />
     <form className="su-content" style={{ width: "100%", gap: 20 }} noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <In id="su-name" label="Full name" autoComplete="name" placeholder="Alex Morgan" value={name} autoFocus onChange={(v) => { setName(v); if (!touched) { const w = v.trim().split(/\s+/); setUser(slugUser(w.length > 1 ? `${w[0]}.${w[w.length - 1]}` : w[0] || "")); } }} />
       <div className="su-f"><label htmlFor="su-user">Your address</label><div className="su-in"><input id="su-user" autoComplete="username" spellCheck={false} autoCapitalize="off" placeholder="alex.morgan" value={user} onChange={(e) => { setUser((e.target as HTMLInputElement).value); setTouched(true); }} /><span className="fix">@melo.to</span></div>
         <p className={`su-ok${avail.ok === false ? " bad" : ""}`}>{avail.msg}</p></div>
-      <In id="su-alt" label="Personal email" type="email" autoComplete="email" placeholder="you@gmail.com" value={alt} onChange={setAlt} />
-      <p className="su-meta small" style={{ marginTop: -12 }}>We’ll email a code here to check it’s you, and use it to sign you in. No work email needed.</p>
-      <Err msg={err} /><button className="su-btn dark" type="submit" disabled={busy}>{busy ? "Checking…" : "Continue"}</button>
+      <div className="su-f"><label htmlFor="su-pw">Password</label>
+        <div className="su-in"><input id="su-pw" type={show ? "text" : "password"} autoComplete="new-password" placeholder="At least 8 characters" value={pw} onChange={(e) => { setPw((e.target as HTMLInputElement).value); setErr(""); }} />
+          <button type="button" className="su-a" style={{ fontSize: 12, flex: "none" }} onClick={() => setShow(!show)}>{show ? "Hide" : "Show"}</button></div>
+        <p className={`su-ok${pw && pw.length < 8 ? " bad" : ""}`}>{strength}</p></div>
+      <p className="su-meta small" style={{ marginTop: -12 }}>You’ll sign in with {u || "your address"}@melo.to and this password. Add a recovery email in Settings so you can reset it if you forget.</p>
+      <Err msg={err} /><button className="su-btn dark" type="submit" disabled={busy}>{busy ? "Creating your address…" : s.personal ? "Create my Melo Mail" : "Create address and continue"}</button>
     </form>
-    <BackLink p={p} />
+    {s.personal ? <p className="su-meta">Setting up a team? <Link className="su-a" to="/signup">Create a business account</Link> · Have an account? <Link className="su-a" to="/signin">Sign in</Link></p> : <BackLink p={p} />}
   </></Frame>;
 }
 

@@ -16,7 +16,7 @@ const COLORS: Record<string, { bg: string; bar: string; label: string }> = {
 const HOUR = 64, START = 7, END = 21;
 
 export default function Calendar() {
-  const { ws, nameOf, account } = useApp();
+  const { ws, nameOf, account, personal } = useApp();
   const toast = useToast();
   const me = auth.get()?.user.id ?? "";
   const [anchor, setAnchor] = useState(() => new Date());
@@ -107,7 +107,7 @@ export default function Calendar() {
             })}
           </div>
         </div>
-        <p className="hidden border-t border-line px-5 py-2 text-xs text-ink-3 md:block">Double-click the grid to add an event. Events are shared with everyone in {ws.name}.</p>
+        <p className="hidden border-t border-line px-5 py-2 text-xs text-ink-3 md:block">Double-click the grid to add an event. {personal ? "Only you can see your personal calendar." : `Events are shared with everyone in ${ws.name}.`}</p>
       </Panel>
       {draft && <EventModal start={draft.start} onClose={() => setDraft(null)} onSaved={(e) => { ev.set((d) => [...(d ?? []), e]); setDraft(null); toast("Event added"); }} />}
       {open && (

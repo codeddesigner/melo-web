@@ -8,7 +8,7 @@ export type Role = "owner" | "admin" | "member" | "guest";
 export type MailProvider = "melo" | "melodomain" | "google" | "microsoft" | "imap";
 
 export interface Profile { full_name: string | null; display_name: string | null; title: string | null; melo_address: string | null; work_email: string | null; prefs: Record<string, unknown> }
-export interface WorkspaceSummary { id: string; name: string; slug: string; domain: string | null; mail_provider: MailProvider | null; domain_verified_at: string | null; created_at: string; role: Role }
+export interface WorkspaceSummary { id: string; name: string; slug: string; kind: "business" | "personal"; domain: string | null; mail_provider: MailProvider | null; domain_verified_at: string | null; created_at: string; role: Role }
 export interface Account { email: string; profile: Profile | null; workspaces: WorkspaceSummary[] }
 export interface Person { user_id: string; role: Role; name: string | null; full_name: string | null; email: string; melo_address: string | null }
 export interface Invite { id: string; email: string; role: Role; created_at: string; sent_at: string | null; expired: boolean }
@@ -25,7 +25,8 @@ export type TaskStatus = "todo" | "in_progress" | "done";
 export type Priority = "low" | "normal" | "high" | "urgent";
 export interface Task { id: string; workspace_id: string; title: string; status: TaskStatus; priority: Priority; assignee: string | null; due: string | null; tags: string[]; source: string | null; created_by: string | null; created_at: string }
 export interface CalEvent { id: string; workspace_id: string; user_id: string; title: string; starts_at: string; ends_at: string; color: string; location: string | null }
-export interface MailMessage { id: string; folder: "sent" | "draft" | "archive"; from_addr: string; to_addrs: string[]; subject: string; body: string; created_at: string }
+export interface MailMessage { id: string; folder: "inbox" | "sent" | "draft" | "archive" | "trash"; from_addr: string; from_name?: string | null; to_addrs: string[]; subject: string; body: string; html?: string | null; read_at?: string | null; created_at: string }
+export interface SecurityInfo { password_account: boolean; recovery_email: string | null; sign_in_email: string }
 
 export class ApiError extends Error { constructor(message: string, public status = 0, public code?: string) { super(message); } }
 
@@ -97,6 +98,16 @@ export const api = {
     setSession(d.session);
     return d.session;
   },
+  /* Melo-only accounts (address + password) */
+  signinMethod: (email: string) => fn<{ method: "password" | "code"; address?: string }>("signin_method", { email }, false),
+  async passwordSignIn(email: string, password: string) { const d = await fn<{ session: Session }>("password_signin", { email, password }, false); setSession(d.session); return d.session; },
+  async meloSignup(p: { name: string; address: string; password: string; personal: boolean }) { const d = await fn<{ session: Session }>("melo_signup", p, false); setSession(d.session); return d.session; },
+  resetSend: (email: string) => fn<{ ok: true; to: string }>("reset_send", { email }, false),
+  async resetVerify(email: string, code: string, password: string) { const d = await fn<{ session?: Session }>("reset_verify", { email, code, password }, false); if (d.session) setSession(d.session); return d.session; },
+  securityInfo: () => fn<SecurityInfo>("security_info"),
+  setPassword: (current: string, password: string) => fn<{ ok: true }>("set_password", { current, password }),
+  recoverySend: (email: string) => fn<{ ok: true }>("recovery_send", { email }),
+  recoveryVerify: (email: string, code: string) => fn<{ ok: true; recovery_email: string }>("recovery_verify", { email, code }),
   addressAvailable: (u: string) => request<boolean>("/rest/v1/rpc/melo_address_available", { method: "POST", body: JSON.stringify({ p_user: u }) }),
   slugAvailable: (s: string) => request<boolean>("/rest/v1/rpc/workspace_slug_available", { method: "POST", body: JSON.stringify({ p_slug: s }) }),
   async completeOnboarding(p: Record<string, unknown>) { await fresh(); return request<{ workspace_id?: string; dns_token?: string; joined?: boolean; accepted?: boolean; workspace?: string }>("/rest/v1/rpc/complete_onboarding", { method: "POST", authed: true, body: JSON.stringify({ p }) }); },
@@ -109,7 +120,7 @@ export const api = {
     const uid = session.user.id;
     const [profiles, members] = await Promise.all([
       rest<Profile[]>("GET", `profiles?select=full_name,display_name,title,melo_address,work_email,prefs&id=eq.${uid}`),
-      rest<{ role: Role; workspaces: Omit<WorkspaceSummary, "role"> | null }[]>("GET", `workspace_members?select=role,workspaces(id,name,slug,domain,mail_provider,domain_verified_at,created_at)&user_id=eq.${uid}&order=created_at.asc`),
+      rest<{ role: Role; workspaces: Omit<WorkspaceSummary, "role"> | null }[]>("GET", `workspace_members?select=role,workspaces(id,name,slug,kind,domain,mail_provider,domain_verified_at,created_at)&user_id=eq.${uid}&order=created_at.asc`),
     ]);
     return { email: session.user.email, profile: profiles[0] ?? null, workspaces: members.filter((m) => m.workspaces).map((m) => ({ ...m.workspaces!, role: m.role })) };
   },
@@ -153,7 +164,10 @@ export const api = {
   deleteEvent: (id: string) => rest<null>("DELETE", `events?id=eq.${id}`),
 
   /* mail */
-  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}&order=created_at.desc&limit=200`),
+  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}&select=id,folder,from_addr,from_name,to_addrs,subject,body,read_at,created_at&order=created_at.desc&limit=200`),
+  mailHtml: async (id: string) => (await rest<{ html: string | null }[]>("GET", `mail_messages?id=eq.${id}&select=html`))[0]?.html ?? null,
+  markRead: (id: string, read = true) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { read_at: read ? new Date().toISOString() : null }, "return=minimal"),
+  moveMail: (id: string, folder: MailMessage["folder"]) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { folder }, "return=minimal"),
   sendMail: (to: string[], subject: string, body: string, ws?: string) => fn<{ ok: true; id: string; created_at: string }>("send_mail", { to, subject, body, workspace_id: ws }),
   saveDraft: async (d: { id?: string; to: string[]; subject: string; body: string; from: string; ws?: string }) => d.id
     ? (await rest<MailMessage[]>("PATCH", `mail_messages?id=eq.${d.id}`, { to_addrs: d.to, subject: d.subject, body: d.body }, "return=representation"))[0]

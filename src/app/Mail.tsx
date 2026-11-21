@@ -12,20 +12,39 @@ type Folder = "inbox" | "sent" | "drafts";
 const PROVIDER: Record<string, string> = { google: "Google Workspace", microsoft: "Microsoft 365", imap: "your mail server", melodomain: "your domain" };
 
 export default function Mail() {
-  const { account, ws, people } = useApp();
+  const { account, ws, people, personal } = useApp();
   const { parts } = useLocation();
   const toast = useToast();
   const folder = (["inbox", "sent", "drafts"].includes(parts[2] ?? "") ? parts[2] : "inbox") as Folder;
   const openId = parts[3];
   const [q, setQ] = useState("");
   const [compose, setCompose] = useState<Partial<MailMessage> | null>(null);
+  const inbox = useAsync<MailMessage[]>(() => api.mail("inbox"), []);
   const sent = useAsync<MailMessage[]>(() => api.mail("sent"), []);
+  /* New mail shows up without a refresh */
+  useEffect(() => {
+    const t = setInterval(() => { if (document.visibilityState === "visible") api.mail("inbox").then((rows) => inbox.set(() => rows), () => {}); }, 20_000);
+    return () => clearInterval(t);
+  }, []); // eslint-disable-line
   const drafts = useAsync<MailMessage[]>(() => api.mail("draft"), []);
   const addr = account.profile?.melo_address ? `${account.profile.melo_address}@melo.to` : null;
-  const list = (folder === "sent" ? sent.data : folder === "drafts" ? drafts.data : []) ?? [];
-  const shown = list.filter((m) => !q || `${m.subject} ${m.body} ${m.to_addrs.join(" ")}`.toLowerCase().includes(q.toLowerCase()));
+  const src = folder === "inbox" ? inbox : folder === "sent" ? sent : drafts;
+  const list = src.data ?? [];
+  const shown = list.filter((m) => !q || `${m.subject} ${m.body} ${m.from_addr} ${m.from_name ?? ""} ${m.to_addrs.join(" ")}`.toLowerCase().includes(q.toLowerCase()));
   const open = list.find((m) => m.id === openId);
-  const loading = folder === "sent" ? sent.loading && !sent.data : folder === "drafts" ? drafts.loading && !drafts.data : false;
+  const loading = src.loading && !src.data;
+  const unread = (inbox.data ?? []).filter((m) => !m.read_at).length;
+  /* Opening an unread message marks it read */
+  useEffect(() => {
+    if (!open || folder !== "inbox" || open.read_at) return;
+    const at = new Date().toISOString();
+    inbox.set((d) => (d ?? []).map((m) => (m.id === open.id ? { ...m, read_at: at } : m)));
+    api.markRead(open.id).catch(() => {});
+  }, [open?.id]); // eslint-disable-line
+  const remove = async (m: MailMessage, to: "archive" | "trash") => {
+    inbox.set((d) => (d ?? []).filter((x) => x.id !== m.id)); navigate("/app/mail/inbox");
+    try { await api.moveMail(m.id, to); toast(to === "archive" ? "Archived" : "Moved to trash"); } catch (e) { toast((e as Error).message, "bad"); inbox.reload(); }
+  };
   const nameFor = (email: string) => people.find((p) => p.email === email || (p.melo_address && `${p.melo_address}@melo.to` === email))?.name || email;
 
   useEffect(() => {
@@ -37,34 +56,37 @@ export default function Mail() {
     <>
       <SideNav title="Mail" action={<Button size="s" icon="plus" onClick={() => setCompose({})}>Compose</Button>}>
         <SideSearch value={q} onChange={setQ} placeholder="Search mail" />
-        <SideItem to="/app/mail/inbox" icon="inbox" label="Inbox" active={folder === "inbox"} />
+        <SideItem to="/app/mail/inbox" icon="inbox" label="Inbox" count={unread || undefined} accent active={folder === "inbox"} />
         <SideItem to="/app/mail/sent" icon="send" label="Sent" count={sent.data?.length} active={folder === "sent"} />
         <SideItem to="/app/mail/drafts" icon="doc" label="Drafts" count={drafts.data?.length} active={folder === "drafts"} />
         <SideLabel>Accounts</SideLabel>
         {addr && <SideItem icon="mail" label={addr} onClick={() => navigate("/app/mail/sent")} />}
-        <SideItem icon="mail" label={account.email} onClick={() => navigate("/app/mail/inbox")} />
+        {account.email !== addr && <SideItem icon="mail" label={account.email} onClick={() => navigate("/app/mail/inbox")} />}
         <span className="flex-1" />
-        <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">
+        {!personal && <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">
           <Icon name="shield" className="mt-0.5 text-icon" /><span><b className="block font-medium">Workspace rules</b><span className="text-accent-ink">Review what gets filtered</span></span>
-        </Link>
+        </Link>}
       </SideNav>
       <Panel className="flex-row">
         <div className={cx("flex min-w-0 flex-col", open ? "hidden w-[420px] border-r border-line lg:flex" : "flex-1")}>
           <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
             <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
             <span className="flex-1" />
-            {folder !== "inbox" && <IconButton icon="refresh" label="Refresh" onClick={() => (folder === "sent" ? sent : drafts).reload()} />}
+            <IconButton icon="refresh" label="Refresh" onClick={() => src.reload()} />
           </header>
           <div className="melo-scroll flex-1 overflow-y-auto px-3 pb-6">
-            {folder === "inbox" ? <InboxState addr={addr} provider={ws.mail_provider} email={account.email} onCompose={() => setCompose({})} />
-              : loading ? <div className="flex flex-col gap-2 px-3"><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
+            {loading ? <div className="flex flex-col gap-2 px-3"><Skeleton className="h-12" /><Skeleton className="h-12" /><Skeleton className="h-12" /></div>
+              : folder === "inbox" && !shown.length && !q ? <InboxState addr={addr} provider={ws.mail_provider} email={account.email} personal={personal} onCompose={() => setCompose({})} />
               : !shown.length ? <Empty icon={folder === "sent" ? "send" : "doc"} title={q ? "No mail matches that" : folder === "sent" ? "Nothing sent yet" : "No drafts"}
                   body={folder === "sent" ? (addr ? `Mail you send from ${addr} shows up here.` : "Claim a @melo.to address to send mail from Melo.") : "Close the composer before sending and your draft is saved here."}
                   action={!q && <Button icon="plus" onClick={() => setCompose({})}>Compose</Button>} />
               : <MailList items={shown} folder={folder} openId={openId} nameFor={nameFor} onDraft={(m) => setCompose(m)} />}
           </div>
         </div>
-        {open && folder === "sent" && <Reader m={open} nameFor={nameFor} onClose={() => navigate("/app/mail/sent")} onForward={() => setCompose({ subject: `Fwd: ${open.subject}`, body: `\n\n---------- Forwarded message ----------\n${open.body}` })} />}
+        {open && folder !== "drafts" && <Reader m={open} nameFor={nameFor} onClose={() => navigate(`/app/mail/${folder}`)}
+          onForward={() => setCompose({ subject: `Fwd: ${open.subject}`, body: `\n\n---------- Forwarded message ----------\nFrom: ${open.from_name ? `${open.from_name} <${open.from_addr}>` : open.from_addr}\n\n${open.body}` })}
+          onReply={open.folder === "inbox" ? () => setCompose({ to_addrs: [open.from_addr], subject: /^re:/i.test(open.subject) ? open.subject : `Re: ${open.subject}`, body: `\n\nOn ${new Date(open.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}, ${open.from_name || open.from_addr} wrote:\n${open.body.split("\n").map((l) => `> ${l}`).join("\n")}` }) : undefined}
+          onArchive={open.folder === "inbox" ? () => remove(open, "archive") : undefined} onTrash={open.folder === "inbox" ? () => remove(open, "trash") : undefined} />}
       </Panel>
       {compose && <Composer initial={compose} from={addr} onClose={(saved) => { setCompose(null); drafts.reload(); if (saved) toast("Draft saved"); }}
         onSent={() => { setCompose(null); sent.reload(); drafts.reload(); toast("Email sent"); navigate("/app/mail/sent"); }} />}
@@ -72,20 +94,20 @@ export default function Mail() {
   );
 }
 
-function InboxState({ addr, provider, email, onCompose }: { addr: string | null; provider: string | null; email: string; onCompose: () => void }) {
+function InboxState({ addr, provider, email, personal, onCompose }: { addr: string | null; provider: string | null; email: string; personal: boolean; onCompose: () => void }) {
   const external = provider && provider !== "melo" ? PROVIDER[provider] : null;
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center animate-fade-up">
       <span className="flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent"><Icon name="inbox" className="size-6" /></span>
-      <h3 className="mt-4 text-[19px] font-medium">You’re all caught up</h3>
+      <h3 className="mt-4 text-[19px] font-medium">{addr ? "You’re all caught up" : "Get your Melo inbox"}</h3>
       <p className="mt-2 max-w-md text-sm text-ink-2">
-        {addr ? <>Melo inboxes for <b className="font-medium">{addr}</b> are opening soon. Until then, you can send from Melo and replies arrive at <b className="font-medium">{email}</b>.</>
-          : <>Claim a free @melo.to address to send mail from Melo. Replies arrive at <b className="font-medium">{email}</b> until Melo inboxes open.</>}
+        {addr ? <>Mail sent to <b className="font-medium">{addr}</b> arrives here.</>
+          : <>Claim a free @melo.to address to send and receive mail in Melo. You’ll keep signing in with <b className="font-medium">{email}</b>.</>}
       </p>
       {external && <p className="mt-3 max-w-md text-sm text-ink-3">Connecting {external} so your existing mail appears here is on the way — we’ll email you when it’s ready.</p>}
       <div className="mt-5 flex gap-2">
         {addr ? <Button icon="plus" onClick={onCompose}>Write an email</Button> : <Button onClick={() => navigate("/app/settings/profile")}>Claim a @melo.to address</Button>}
-        <Button variant="soft" onClick={() => navigate("/app/team")}>Open Team chat</Button>
+        {!personal && <Button variant="soft" onClick={() => navigate("/app/team")}>Open Team chat</Button>}
       </div>
     </div>
   );
@@ -98,16 +120,18 @@ function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMess
       {items.map((m) => {
         const day = dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
         const to = m.to_addrs.map(nameFor).join(", ") || "No recipients";
+        const inboxRow = folder === "inbox", unread = inboxRow && !m.read_at;
+        const who = inboxRow ? (m.from_name || m.from_addr) : `To ${to}`;
         return (
           <div key={m.id}>
             {header && <p className="px-3 pt-4 pb-1 text-xs text-ink-3">{header}</p>}
-            <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/sent/${m.id}`))}
+            <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/${folder}/${m.id}`))}
               className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left animate-fade-up active:scale-[.99]", openId === m.id ? "bg-accent-soft" : "hover:bg-hover")}>
               {openId === m.id && <span className="absolute left-0 top-3 h-6 w-0.5 rounded bg-accent animate-fade-in" />}
-              <Avatar name={to} id={m.to_addrs[0]} size={28} />
+              <Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} />
               <span className="min-w-0">
-                <span className="flex items-center gap-2"><span className="truncate font-medium">{folder === "drafts" && <span className="text-bad">Draft · </span>}To {to}</span></span>
-                <span className="block truncate text-sm"><span className="text-ink">{m.subject || "(no subject)"}</span> <span className="text-ink-3">{m.body.slice(0, 120)}</span></span>
+                <span className="flex items-center gap-2">{unread && <span className="size-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />}<span className={cx("truncate", unread ? "font-semibold" : "font-medium")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
+                <span className="block truncate text-sm"><span className={cx("text-ink", unread && "font-medium")}>{m.subject || "(no subject)"}</span> <span className="text-ink-3">{m.body.slice(0, 120)}</span></span>
               </span>
               <span className="text-xs text-ink-3">{fmtShort(m.created_at)}</span>
             </button>
@@ -118,27 +142,52 @@ function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMess
   );
 }
 
-function Reader({ m, nameFor, onClose, onForward }: { m: MailMessage; nameFor: (e: string) => string; onClose: () => void; onForward: () => void }) {
+function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash }: { m: MailMessage; nameFor: (e: string) => string; onClose: () => void; onForward: () => void; onReply?: () => void; onArchive?: () => void; onTrash?: () => void }) {
   const { account } = useApp();
+  const incoming = m.folder === "inbox" || m.folder === "archive";
+  const fromName = incoming ? (m.from_name || m.from_addr) : (account.profile?.full_name || m.from_addr);
   return (
     <article className="flex min-w-0 flex-1 flex-col animate-fade-up">
       <header className="flex h-16 shrink-0 items-center gap-1 border-b border-line px-5">
-        <IconButton icon="chev-left" label="Back to Sent" onClick={onClose} />
+        <IconButton icon="chev-left" label={`Back to ${incoming ? "Inbox" : "Sent"}`} onClick={onClose} />
+        {onArchive && <IconButton icon="archive" label="Archive" onClick={onArchive} />}
+        {onTrash && <IconButton icon="trash" label="Delete" onClick={onTrash} className="hover:text-bad" />}
         <span className="flex-1" />
+        {onReply && <Button size="s" icon="send" onClick={onReply}>Reply</Button>}
         <Button variant="soft" size="s" icon="send" onClick={onForward}>Forward</Button>
       </header>
       <div className="melo-scroll flex-1 overflow-y-auto px-5 py-6 md:px-8">
         <h2 className="text-[20px] font-medium">{m.subject || "(no subject)"}</h2>
         <div className="mt-4 flex items-center gap-3">
-          <Avatar name={account.profile?.full_name || m.from_addr} size={36} dark />
-          <div className="min-w-0 flex-1"><p className="font-medium">{account.profile?.full_name || m.from_addr} <span className="font-normal text-ink-3">&lt;{m.from_addr}&gt;</span></p>
+          <Avatar name={fromName} id={incoming ? m.from_addr : undefined} size={36} dark={!incoming} />
+          <div className="min-w-0 flex-1"><p className="truncate font-medium">{fromName} <span className="font-normal text-ink-3">&lt;{m.from_addr}&gt;</span></p>
             <p className="truncate text-[13px] text-ink-3">to {m.to_addrs.map(nameFor).join(", ")}</p></div>
           <span className="text-xs text-ink-3">{new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}, {fmtTime(m.created_at)}</span>
         </div>
-        <div className="mt-6 whitespace-pre-wrap text-[15px] leading-[24px]">{m.body}</div>
-        <div className="mt-8"><Tag tone="ok" icon="check">Sent from Melo</Tag></div>
+        {incoming ? <MailBody m={m} /> : <div className="mt-6 whitespace-pre-wrap break-words text-[15px] leading-[24px]">{m.body}</div>}
+        {!incoming && <div className="mt-8"><Tag tone="ok" icon="check">Sent from Melo</Tag></div>}
       </div>
     </article>
+  );
+}
+
+/* Received mail: HTML in a locked-down frame (no scripts; remote images only when asked), else plain text */
+function MailBody({ m }: { m: MailMessage }) {
+  const [html, setHtml] = useState<string | null | undefined>(undefined);
+  const [images, setImages] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  useEffect(() => { let live = true; setHtml(undefined); setImages(false); api.mailHtml(m.id).then((h) => live && setHtml(h), () => live && setHtml(null)); return () => { live = false; }; }, [m.id]);
+  const remote = Boolean(html && /<img[^>]+src=["']?https?:/i.test(html));
+  const csp = `default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data: cid:${images ? " https: http:" : ""}`;
+  const doc = html ? `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>body{margin:0;font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#202020;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}</style></head><body>${html}</body></html>` : "";
+  const fit = () => { const el = frame.current; const d = el?.contentDocument; if (el && d?.body) el.style.height = `${Math.max(120, d.documentElement.scrollHeight)}px`; };
+  if (html === undefined) return <div className="mt-6 flex flex-col gap-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>;
+  if (!html) return <div className="mt-6 whitespace-pre-wrap break-words text-[15px] leading-[24px] animate-fade-in">{m.body}</div>;
+  return (
+    <div className="mt-6 animate-fade-in">
+      {remote && !images && <div className="mb-3 flex items-center gap-2 rounded-xl bg-subtle px-3 py-2 text-[13px] text-ink-2"><Icon name="eye-off" className="size-4" />Images from the web are hidden to protect your privacy.<button type="button" className="ml-auto font-medium text-accent-ink hover:underline" onClick={() => setImages(true)}>Show images</button></div>}
+      <iframe key={String(images)} ref={frame} title="Message" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" srcDoc={doc} onLoad={fit} className="block w-full rounded-lg border-0" style={{ height: 160 }} />
+    </div>
   );
 }
 

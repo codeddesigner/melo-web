@@ -38,7 +38,7 @@ function Loaded() {
   const acct = useAsync<Account | null>(() => api.account(), []);
   const [wsId, setWsId] = useState<string | null>(savedWs);
   const account = acct.data;
-  const ws = account?.workspaces.find((w) => w.id === wsId) ?? account?.workspaces[0];
+  const ws = account?.workspaces.find((w) => w.id === wsId) ?? account?.workspaces.find((w) => w.kind === "business") ?? account?.workspaces[0];
   const people = useAsync<Person[]>(() => (ws ? api.people(ws.id) : Promise.resolve([])), [ws?.id]);
   const [unread, setUnread] = useState({ team: 0 });
 
@@ -57,7 +57,7 @@ function Loaded() {
     return {
       account, ws, people: list, me: person(auth.get()?.user.id), person,
       nameOf: (id) => { const p = person(id); return p?.name || p?.email?.split("@")[0] || "Someone"; },
-      isAdmin: ws.role === "owner" || ws.role === "admin",
+      isAdmin: ws.role === "owner" || ws.role === "admin", personal: ws.kind === "personal",
       reloadAccount: acct.reload, reloadPeople: people.reload, switchWorkspace, unread, setUnread,
     };
   }, [account, ws, people.data, acct.reload, people.reload, switchWorkspace, unread]);
@@ -78,6 +78,7 @@ function Shell() {
   const { parts } = useLocation();
   const section = parts[1] ?? "";
   const ctx = useApp();
+  useEffect(() => { if (ctx.personal && section === "team") navigate("/app/mail", { replace: true }); }, [ctx.personal, section]);
   useEffect(() => { if (!section) navigate("/app/mail", { replace: true }); }, [section]);
   useEffect(() => {
     const idle = (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 600));
@@ -96,7 +97,7 @@ function Shell() {
 }
 
 function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) {
-  const { account, ws, switchWorkspace } = useApp();
+  const { account, ws, switchWorkspace, personal } = useApp();
   const name = account.profile?.full_name || account.email;
   const others = account.workspaces.filter((w) => w.id !== ws.id);
   const tab = (key: string, label: string, icon: IconName, badge?: number) => (
@@ -114,11 +115,11 @@ function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) 
           <MeloMark className="h-[11px] w-[17px]" />
         </button>
       )} items={[
-        ...others.map((w) => ({ label: `Switch to ${w.name}`, icon: "grid" as IconName, onSelect: () => switchWorkspace(w.id) })),
-        { label: "New workspace", icon: "plus", onSelect: () => navigate("/signup?resume=1") },
+        ...others.map((w) => ({ label: w.kind === "personal" ? "Switch to Personal" : `Switch to ${w.name}`, icon: (w.kind === "personal" ? "user" : "grid") as IconName, onSelect: () => switchWorkspace(w.id) })),
+        { label: personal ? "Create a business workspace" : "New workspace", icon: "plus", onSelect: () => navigate("/signup?resume=1") },
         { label: "Melo website", icon: "globe", onSelect: () => navigate("/") },
       ]} />
-      {TABS.map((t) => tab(t.key, t.label, t.icon, t.key === "team" ? unreadTeam : undefined))}
+      {TABS.filter((t) => !(personal && t.key === "team")).map((t) => tab(t.key, t.label, t.icon, t.key === "team" ? unreadTeam : undefined))}
       <span className="flex-1" />
       {tab("settings", "Settings", "settings")}
       <Menu align="left" trigger={(open) => (
@@ -133,9 +134,10 @@ function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) 
 
 /* Phones: the rail becomes a bottom tab bar */
 function TabBar({ section, unreadTeam }: { section: string; unreadTeam: number }) {
+  const { personal } = useApp();
   return (
     <nav aria-label="Melo sections" className="flex shrink-0 items-stretch justify-around border-t border-line bg-white/95 px-1 pb-[max(env(safe-area-inset-bottom),4px)] pt-1 backdrop-blur md:hidden">
-      {[...TABS, { key: "settings", label: "Settings", icon: "settings" as IconName }].map((t) => (
+      {[...TABS.filter((t) => !(personal && t.key === "team")), { key: "settings", label: "Settings", icon: "settings" as IconName }].map((t) => (
         <Link key={t.key} to={`/app/${t.key}`} aria-current={section === t.key ? "page" : undefined}
           className={cx("relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] active:scale-95", section === t.key ? "font-semibold text-ink" : "text-ink-3")}>
           <span className={cx("flex h-7 w-12 items-center justify-center rounded-full", section === t.key && "bg-active")}><Icon name={t.icon} className="size-[18px]" /></span>

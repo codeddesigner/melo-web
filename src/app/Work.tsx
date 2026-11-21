@@ -18,7 +18,7 @@ const PRIO: Record<Priority, { label: string; color: string }> = {
 type View = "mine" | "by-me" | "week" | "all" | "done";
 
 export default function Work() {
-  const { ws, nameOf, people } = useApp();
+  const { ws, nameOf, people, personal } = useApp();
   const { parts, query } = useLocation();
   const toast = useToast();
   const me = auth.get()?.user.id ?? "";
@@ -71,7 +71,7 @@ export default function Work() {
         <div className="melo-scroll flex-1 overflow-auto px-2 pb-8 md:px-6">
           {tasks.error ? <Empty icon="task" title="We couldn’t load tasks" body={tasks.error} action={<Button onClick={tasks.reload}>Try again</Button>} />
             : tasks.loading && !tasks.data ? <div className="flex flex-col gap-2 pt-4"><Skeleton className="h-10" /><Skeleton className="h-10" /><Skeleton className="h-10" /></div>
-            : !shown.length ? <Empty icon="task" title={all.length ? "Nothing here" : "No tasks yet"} body={all.length ? "Try another view or tag." : "Track work with owners, due dates and tags. Everyone in the workspace can see and update tasks."} action={<Button icon="plus" onClick={() => setEditing("new")}>New task</Button>} />
+            : !shown.length ? <Empty icon="task" title={all.length ? "Nothing here" : "No tasks yet"} body={all.length ? "Try another view or tag." : personal ? "Keep track of your own to-dos with due dates and tags. Only you can see them." : "Track work with owners, due dates and tags. Everyone in the workspace can see and update tasks."} action={<Button icon="plus" onClick={() => setEditing("new")}>New task</Button>} />
             : layout === "list" ? <ListView tasks={shown} nameOf={nameOf} onOpen={setEditing} onToggle={toggleDone} />
             : <BoardView tasks={shown} nameOf={nameOf} onOpen={setEditing} onMove={(t, s) => update(t, { status: s })} />}
         </div>

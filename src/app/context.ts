@@ -9,6 +9,7 @@ export interface AppCtx {
   person: (id: string | null | undefined) => Person | undefined;
   nameOf: (id: string | null | undefined) => string;
   isAdmin: boolean;
+  personal: boolean;
   reloadAccount: () => void;
   reloadPeople: () => void;
   switchWorkspace: (id: string) => void;

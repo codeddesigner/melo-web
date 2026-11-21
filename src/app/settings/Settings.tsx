@@ -12,10 +12,11 @@ type Page = (typeof PAGES)[number];
 
 export default function Settings() {
   const { parts } = useLocation();
-  const { ws, isAdmin } = useApp();
-  const page = (PAGES as readonly string[]).includes(parts[2] ?? "") ? (parts[2] as Page) : null;
+  const { ws, isAdmin, personal } = useApp();
+  const allowed = personal ? ["profile", "notifications"] : (PAGES as readonly string[]);
+  const page = allowed.includes(parts[2] ?? "") ? (parts[2] as Page) : null;
   useEffect(() => { if (!page) navigate("/app/settings/profile", { replace: true }); }, [page]);
-  const ov = useAsync<Overview>(() => api.overview(ws.id), [ws.id]);
+  const ov = useAsync<Overview>(() => (personal ? Promise.resolve(undefined as unknown as Overview) : api.overview(ws.id)), [ws.id, personal]);
   const item = (p: Page, icon: IconName, label: string, count?: number) => <SideItem key={p} to={`/app/settings/${p}`} icon={icon} label={label} count={count} active={page === p} />;
   return (
     <>
@@ -23,12 +24,18 @@ export default function Settings() {
         <SideLabel>Your account</SideLabel>
         {item("profile", "user", "Profile")}
         {item("notifications", "bell", "Notifications")}
-        <SideLabel>{ws.name}</SideLabel>
-        {item("general", "grid", "General")}
-        {item("members", "users", "Members", ov.data?.members.length)}
-        {item("rules", "shield", "Rules & filters", ov.data ? Object.values(ov.data.rules).filter(Boolean).length : undefined)}
-        {item("domains", "link", "Email domains")}
-        {item("billing", "bolt", "Billing")}
+        {personal ? <>
+          <SideLabel>Business</SideLabel>
+          <SideItem to="/signup?resume=1" icon="plus" label="Create a business workspace" />
+          <p className="px-2.5 pt-1 text-xs text-ink-3">Add team chat, shared tasks, members and your company domain. Your personal mail stays yours.</p>
+        </> : <>
+          <SideLabel>{ws.name}</SideLabel>
+          {item("general", "grid", "General")}
+          {item("members", "users", "Members", ov.data?.members.length)}
+          {item("rules", "shield", "Rules & filters", ov.data ? Object.values(ov.data.rules).filter(Boolean).length : undefined)}
+          {item("domains", "link", "Email domains")}
+          {item("billing", "bolt", "Billing")}
+        </>}
       </SideNav>
       <Panel>
         <div className="melo-scroll flex-1 overflow-y-auto">
@@ -77,7 +84,7 @@ function ProfilePage() {
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <Avatar name={f.full_name || account.email} size={64} dark />
-            <div><p className="text-[18px] font-medium">{f.full_name || account.email}</p><p className="text-sm text-ink-3 capitalize">{ws.role} · {ws.name}</p></div>
+            <div><p className="text-[18px] font-medium">{f.full_name || account.email}</p><p className="text-sm text-ink-3 capitalize">{ws.kind === "personal" ? "Personal account" : `${ws.role} · ${ws.name}`}</p></div>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <Field label="Full name"><Input value={f.full_name} onChange={(v) => setF({ ...f, full_name: v })} autoComplete="name" /></Field>
@@ -86,12 +93,7 @@ function ProfilePage() {
           </div>
         </Card>
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="p-5">
-            <h3 className="mb-3 font-medium">Sign-in & security</h3>
-            <Row icon="mail" label="Sign-in email" value={account.email} />
-            <Row icon="lock" label="Password" value="Not needed — you sign in with a code" />
-            <Row icon="shield" label="Codes" value="Expire after 10 minutes" />
-          </Card>
+          <SecurityCard />
           <Card className="p-5">
             <h3 className="mb-3 font-medium">Melo address</h3>
             <MeloAddress />
@@ -103,6 +105,57 @@ function ProfilePage() {
         </Card>
       </Body>
     </>
+  );
+}
+/* Sign-in & security: password + recovery email for Melo-only accounts, code sign-in otherwise */
+function SecurityCard() {
+  const { account } = useApp();
+  const toast = useToast();
+  const info = useAsync(() => api.securityInfo(), []);
+  const [mode, setMode] = useState<"" | "password" | "recovery" | "recovery-code">("");
+  const [f, setF] = useState({ current: "", next: "", email: "", code: "" });
+  const [busy, setBusy] = useState(false);
+  const run = async (fn: () => Promise<unknown>, done: string, after: () => void) => {
+    setBusy(true);
+    try { await fn(); toast(done); after(); } catch (e) { toast((e as Error).message, "bad"); } finally { setBusy(false); }
+  };
+  const d = info.data;
+  return (
+    <Card className="p-5">
+      <h3 className="mb-3 font-medium">Sign-in & security</h3>
+      {!d ? <div className="flex flex-col gap-2"><Skeleton className="h-6" /><Skeleton className="h-6" /></div> : d.password_account ? <>
+        <Row icon="mail" label="Sign in with" value={account.email} />
+        <Row icon="lock" label="Password" value={<button type="button" className="text-accent-ink hover:underline" onClick={() => setMode(mode === "password" ? "" : "password")}>Change</button>} />
+        <Row icon="shield" label="Recovery email" value={d.recovery_email ? <span>{d.recovery_email} · <button type="button" className="text-accent-ink hover:underline" onClick={() => setMode("recovery")}>Change</button></span> : <button type="button" className="font-medium text-warn hover:underline" onClick={() => setMode("recovery")}>Add one</button>} />
+        {!d.recovery_email && mode === "" && <p className="mt-2 rounded-xl bg-warn-soft px-3 py-2 text-xs text-warn">Without a recovery email, a forgotten password can’t be reset.</p>}
+        {mode === "password" && (
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl bg-subtle p-3 animate-fade-up">
+            <Field label="Current password"><Input type="password" autoComplete="current-password" value={f.current} onChange={(v) => setF({ ...f, current: v })} /></Field>
+            <Field label="New password" hint="At least 8 characters"><Input type="password" autoComplete="new-password" value={f.next} onChange={(v) => setF({ ...f, next: v })} /></Field>
+            <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setMode("")}>Cancel</Button>
+              <Button busy={busy} onClick={() => run(() => api.setPassword(f.current, f.next), "Password changed", () => { setMode(""); setF({ ...f, current: "", next: "" }); })}>Save password</Button></div>
+          </div>
+        )}
+        {mode === "recovery" && (
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl bg-subtle p-3 animate-fade-up">
+            <Field label="Recovery email" hint="An email outside Melo, like Gmail. We’ll send a code to confirm it."><Input type="email" autoComplete="email" value={f.email} onChange={(v) => setF({ ...f, email: v })} placeholder="you@gmail.com" /></Field>
+            <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setMode("")}>Cancel</Button>
+              <Button busy={busy} onClick={() => run(() => api.recoverySend(f.email.trim()), "Code sent", () => setMode("recovery-code"))}>Send code</Button></div>
+          </div>
+        )}
+        {mode === "recovery-code" && (
+          <div className="mt-3 flex flex-col gap-3 rounded-2xl bg-subtle p-3 animate-fade-up">
+            <Field label={`Code sent to ${f.email.trim()}`}><Input value={f.code} onChange={(v) => setF({ ...f, code: v.replace(/\D/g, "").slice(0, 6) })} placeholder="6-digit code" autoComplete="one-time-code" /></Field>
+            <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setMode("recovery")}>Back</Button>
+              <Button busy={busy} onClick={() => run(() => api.recoveryVerify(f.email.trim(), f.code), "Recovery email saved", () => { setMode(""); setF({ ...f, code: "", email: "" }); info.reload(); })}>Confirm</Button></div>
+          </div>
+        )}
+      </> : <>
+        <Row icon="mail" label="Sign-in email" value={account.email} />
+        <Row icon="lock" label="Password" value="Not needed — you sign in with a code" />
+        <Row icon="shield" label="Codes" value="Expire after 10 minutes" />
+      </>}
+    </Card>
   );
 }
 function Row({ icon, label, value, tone }: { icon: IconName; label: string; value: ReactNode; tone?: string }) {
@@ -125,7 +178,7 @@ function MeloAddress() {
     <div className="flex flex-col gap-2 text-sm">
       <div className="flex items-center justify-between rounded-xl bg-subtle px-3 py-2.5"><span className="font-medium">{addr}@melo.to</span>
         <IconButton icon="copy" label="Copy address" onClick={() => copy(`${addr}@melo.to`).then(() => toast("Address copied"))} /></div>
-      <p className="text-ink-3">You can send mail from this address in Melo Mail. Replies go to {account.email} until Melo inboxes open.</p>
+      <p className="text-ink-3">Send and receive mail at this address in Melo Mail. Replies land in your Melo inbox.</p>
     </div>
   );
   const claim = async () => {
