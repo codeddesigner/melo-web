@@ -5,10 +5,10 @@ const subs = new Set<() => void>();
 const emit = () => subs.forEach((s) => s());
 if (typeof window !== "undefined") window.addEventListener("popstate", emit);
 
-export function navigate(to: string, opts: { replace?: boolean } = {}) {
+export function navigate(to: string, opts: { replace?: boolean; scroll?: boolean } = {}) {
   if (to === location.pathname + location.search + location.hash) return;
   history[opts.replace ? "replaceState" : "pushState"](null, "", to);
-  if (!to.includes("#")) window.scrollTo(0, 0);
+  if (opts.scroll !== false && !to.includes("#")) window.scrollTo(0, 0);
   emit();
 }
 const subscribe = (cb: () => void) => { subs.add(cb); return () => { subs.delete(cb); }; };

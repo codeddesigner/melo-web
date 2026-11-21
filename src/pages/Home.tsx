@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
-import { Link } from "../lib/router";
+import { Link, navigate, useLocation } from "../lib/router";
 import { useSession } from "../lib/session";
 import { copy, isEmail } from "../lib/util";
 import { Icon } from "../components/icons";
@@ -8,13 +8,60 @@ import { Header } from "../marketing/Header";
 import { Booker, HeroInbox, Mini, RulesCard } from "../marketing/Previews";
 import { FAQ } from "../marketing/data";
 
+/* Sections have clean URLs (/product, /faq …) instead of #anchors.
+   Visiting one scrolls there smoothly; in-page links update the URL without reloading. */
+const SECTIONS = ["product", "rules", "booking", "vs-slack", "faq"];
+function sectionTop(id: string) {
+  const el = document.getElementById(id); if (!el) return null;
+  const head = document.querySelector<HTMLElement>(".site-header")?.offsetHeight ?? 0;
+  return el.getBoundingClientRect().top + window.scrollY - head - 8;
+}
+function scrollToSection(id: string, smooth = true) {
+  const top = sectionTop(id); if (top !== null) window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+}
+function useSectionLinks(openDemo: () => void) {
+  const { parts } = useLocation();
+  const sec = parts[0] ?? "";
+  const first = useRef(true);
+  useEffect(() => {
+    const arriving = first.current; first.current = false;
+    if (sec === "demo") { openDemo(); return; }
+    if (!SECTIONS.includes(sec)) return;
+    if (!arriving) { const t = setTimeout(() => scrollToSection(sec), 30); return () => clearTimeout(t); }
+    /* Arriving from another page: land on the section, then hold it there while fonts and images settle */
+    const align = () => { const top = sectionTop(sec); if (top !== null && Math.abs(window.scrollY - top) > 4) window.scrollTo({ top, behavior: "auto" }); };
+    const ro = new ResizeObserver(align); ro.observe(document.body);
+    const timers = [setTimeout(align, 0), setTimeout(() => { ro.disconnect(); align(); }, 2500)];
+    let stop = false; const cancel = () => { stop = true; ro.disconnect(); timers.forEach(clearTimeout); };
+    window.addEventListener("wheel", cancel, { once: true, passive: true }); window.addEventListener("touchstart", cancel, { once: true, passive: true });
+    return () => { if (!stop) cancel(); window.removeEventListener("wheel", cancel); window.removeEventListener("touchstart", cancel); };
+  }, [sec]); // eslint-disable-line
+  useEffect(() => {
+    /* Old links like /#faq still work, and the URL is tidied to /faq */
+    const h = location.hash.slice(1);
+    if (h === "top") history.replaceState(null, "", "/");
+    else if (h && (SECTIONS.includes(h) || h === "demo")) navigate("/" + h, { replace: true, scroll: false });
+    const click = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement).closest("a"); if (!a || a.origin !== location.origin || a.target) return;
+      const p = a.pathname.replace(/^\/|\/$/g, "");
+      if (p === "demo") { e.preventDefault(); openDemo(); return; }
+      if (!SECTIONS.includes(p)) return;
+      e.preventDefault();
+      if (location.pathname === "/" + p) scrollToSection(p); else navigate("/" + p, { scroll: false });
+    };
+    document.addEventListener("click", click);
+    return () => document.removeEventListener("click", click);
+  }, []); // eslint-disable-line
+}
+
 export default function Home() {
   const signedIn = Boolean(useSession());
   const [demo, setDemo] = useState(false);
   useEffect(() => { document.title = "Melo for Business — Mail, team chat and work in one calm place"; }, []);
   useEffect(() => { const f = () => setDemo(true); window.addEventListener("melo:demo", f); return () => window.removeEventListener("melo:demo", f); }, []);
   useReveal(); useHeroMotion();
-  useEffect(() => { if (location.hash) setTimeout(() => document.querySelector(location.hash)?.scrollIntoView(), 60); }, []);
+  useSectionLinks(() => setDemo(true));
   return (
     <>
       <Header signedIn={signedIn} onDemo={() => setDemo(true)} />
@@ -54,7 +101,7 @@ export default function Home() {
         <Faq />
       </main>
       <Footer signedIn={signedIn} />
-      {demo && <DemoDialog onClose={() => setDemo(false)} />}
+      {demo && <DemoDialog onClose={() => { setDemo(false); if (location.pathname === "/demo") navigate("/", { replace: true, scroll: false }); }} />}
     </>
   );
 }
@@ -166,11 +213,11 @@ function Footer({ signedIn }: { signedIn: boolean }) {
     <footer className="site-foot">
       <div className="sf-inner">
         <div className="sf-top">
-          <a href="#top" className="sf-logo" aria-label="Melo business home"><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
+          <a href="/" className="sf-logo" aria-label="Melo business home"><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
           <nav className="sf-cols" aria-label="Footer">
-            <div className="sf-col m-in"><h5>Product</h5><a href="#product">Mail</a><a href="#product">Team</a><a href="#product">Work</a><a href="#booking">Calendar</a><a href="#rules">Rules &amp; filters</a></div>
+            <div className="sf-col m-in"><h5>Product</h5><a href="/product">Mail</a><a href="/product">Team</a><a href="/product">Work</a><a href="/booking">Calendar</a><a href="/rules">Rules &amp; filters</a></div>
             <div className="sf-col m-in"><h5>Get started</h5>{signedIn ? <Link to="/app">Visit workspace</Link> : <><Link to="/signup">Create an account</Link><Link to="/signin">Sign in</Link></>}<Link to="/signup?start=melo">Free @melo.to address</Link></div>
-            <div className="sf-col m-in"><h5>Resources</h5><a href="#faq">Help center</a><a href="#vs-slack">Melo vs. Slack</a><a href="#demo" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new Event("melo:demo")); }}>Book a demo</a></div>
+            <div className="sf-col m-in"><h5>Resources</h5><a href="/faq">Help center</a><a href="/vs-slack">Melo vs. Slack</a><a href="/demo" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new Event("melo:demo")); }}>Book a demo</a></div>
             <div className="sf-col m-in"><h5>Contact</h5><a href="mailto:hello@melo.to">hello@melo.to</a></div>
           </nav>
         </div>

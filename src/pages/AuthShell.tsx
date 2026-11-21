@@ -24,11 +24,11 @@ export function AuthShell({ step, grad, preview, children, stepKey }: { step?: s
           <div className="su-grow" />
           <div className="su-content" key={stepKey}>{children}</div>
           <div className="su-grow" />
-          <p className="su-foot">© 2026 Melo · <Link to="/#faq">Help</Link></p>
+          <p className="su-foot">© 2026 Melo · <Link to="/faq">Help</Link></p>
         </main>
         <aside className="su-prev" aria-hidden="true">
           <div className="su-grad" style={{ background: GRAD[grad] }} />
-          <Link to="/#faq" className="su-help"><Icon name="comment" className="icon" />Questions? Chat with us</Link>
+          <Link to="/faq" className="su-help"><Icon name="comment" className="icon" />Questions? Chat with us</Link>
           <div className="su-stage" ref={stage}>{preview}</div>
         </aside>
       </div>
