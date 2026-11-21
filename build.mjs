@@ -113,7 +113,7 @@ const page = (x) => `<!doctype html>
 <meta property="og:description" content="${esc(x.og)}">
 <meta property="og:image" content="${x.image}">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image:height" content="696">
 <meta property="og:image:alt" content="${esc(x.imageAlt)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(x.title)}">
