@@ -10,7 +10,7 @@ import { MockWindow, PersonalMock, Scaled, type MockView } from "../personal/Moc
 import { SiteToggle } from "../marketing/SiteToggle";
 
 const H2 = "font-display font-medium tracking-[-0.015em] text-ink";
-const BTN = "inline-flex h-[54px] items-center justify-center rounded-full px-6 text-[15px] font-semibold transition-[background-color,transform,box-shadow] duration-200 active:scale-[.98]";
+const BTN = "inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-[15px] sm:h-[54px] sm:w-auto sm:px-6 font-semibold transition-[background-color,transform,box-shadow] duration-200 active:scale-[.98]";
 
 export default function PersonalHome() {
   const signedIn = Boolean(useSession());
@@ -27,7 +27,7 @@ export default function PersonalHome() {
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f3e48f_0%,#f7eebb_38%,#fbf8e6_68%,#ffffff_100%)] px-4 pt-14 pb-16 text-center md:pt-[72px]">
           <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink animate-fade-up sm:text-[60px] lg:text-[76px]">Mail from people first.<br />Everything else, later.</h1>
           <p className="mx-auto mt-6 max-w-[680px] text-[17px] leading-[1.45] text-ink-sec animate-fade-up [animation-delay:60ms] md:text-[19px]">Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.</p>
-          <div className="mt-7 flex flex-wrap justify-center gap-3 animate-fade-up [animation-delay:120ms]">
+          <div className="mx-auto mt-7 flex max-w-[360px] flex-col justify-center gap-3 animate-fade-up [animation-delay:120ms] sm:max-w-none sm:flex-row">
             <Link to={start} className={cx(BTN, "bg-inverse text-white hover:bg-[#333]")}>{startLabel}</Link>
             <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/70 text-ink backdrop-blur hover:bg-white")}>Download the app</button>
           </div>
@@ -140,7 +140,7 @@ export default function PersonalHome() {
           <div className="flex flex-col items-center gap-7 rounded-[32px] bg-inverse px-6 py-16 text-center md:py-24">
             <h2 className="font-display text-[38px] leading-[1.05] font-medium tracking-[-0.01em] text-white md:text-[60px]">Give your inbox some quiet.</h2>
             <p className="text-[17px] leading-[22px] text-white/90 md:text-[19px]">Claim your free @melo.to address, or bring Gmail, Outlook or iCloud.</p>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex w-full max-w-[360px] flex-col justify-center gap-3 sm:max-w-none sm:w-auto sm:flex-row">
               <Link to={start} className={cx(BTN, "bg-white text-ink hover:bg-[#f2f2f2]")}>{startLabel}</Link>
               <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/[.18] text-white hover:bg-white/25")}>Download the app</button>
             </div>
