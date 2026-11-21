@@ -8,6 +8,11 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/index",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
@@ -17,11 +22,6 @@
       ],
       "destination": "https://melo.to/:path*",
       "permanent": false
-    },
-    {
-      "source": "/index",
-      "destination": "/",
-      "permanent": true
     },
     {
       "source": "/signin.html",
@@ -52,7 +52,7 @@
     },
     {
       "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|wordmark\\.svg|[a-z]+\\.css).*)",
-      "destination": "/"
+      "destination": "/business"
     }
   ],
   "headers": [
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "source": "/",
+      "source": "/((?!assets/|fonts/).*)",
       "headers": [
         {
           "key": "Cache-Control",

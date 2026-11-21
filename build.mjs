@@ -85,7 +85,8 @@ ${siteLinks}
 </body>
 </html>
 `;
-fs.writeFileSync(path.join(out, "index.html"), html);
+/* No index.html on purpose: Vercel serves static files before rewrites, so "/" must come from a rewrite to pick the right site per host */
+fs.writeFileSync(path.join(out, "business.html"), html);
 fs.writeFileSync(path.join(out, "404.html"), html);
 /* melo.to gets the same app with Melo Personal's title and link previews */
 const personalHtml = html
