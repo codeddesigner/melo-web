@@ -41,7 +41,7 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|wordmark\\.svg|[a-z]+\\.css).*)",
+      "source": "/",
       "has": [
         {
           "type": "host",
@@ -51,7 +51,63 @@
       "destination": "/personal"
     },
     {
-      "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|wordmark\\.svg|[a-z]+\\.css).*)",
+      "source": "/(personal|business|product|rules|booking|vs-slack|faq|demo|signin|signup|index)",
+      "has": [
+        {
+          "type": "host",
+          "value": "melo.to"
+        }
+      ],
+      "destination": "/personal"
+    },
+    {
+      "source": "/app",
+      "has": [
+        {
+          "type": "host",
+          "value": "melo.to"
+        }
+      ],
+      "destination": "/personal"
+    },
+    {
+      "source": "/app/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "melo.to"
+        }
+      ],
+      "destination": "/personal"
+    },
+    {
+      "source": "/book/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "melo.to"
+        }
+      ],
+      "destination": "/personal"
+    },
+    {
+      "source": "/",
+      "destination": "/business"
+    },
+    {
+      "source": "/(personal|business|product|rules|booking|vs-slack|faq|demo|signin|signup|index)",
+      "destination": "/business"
+    },
+    {
+      "source": "/app",
+      "destination": "/business"
+    },
+    {
+      "source": "/app/(.*)",
+      "destination": "/business"
+    },
+    {
+      "source": "/book/(.*)",
       "destination": "/business"
     }
   ],
@@ -80,6 +136,42 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/app",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/app/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/book/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/(og-business|og-personal)\\.jpg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
         }
       ]
     }

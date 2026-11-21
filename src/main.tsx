@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { navigate, useLocation } from "./lib/router";
 import { ToastProvider } from "./components/ui";
 import { onPersonalHost } from "./lib/site";
+import { isBusinessSection, updateSeo } from "./lib/seo";
 
 const Home = lazy(() => import("./pages/Home"));
 const PersonalOnboarding = lazy(() => import("./personal/Onboarding"));
@@ -19,10 +20,13 @@ function Routes() {
   const isApp = top === "app";
   useEffect(() => { document.body.style.background = isApp ? "#f7f8fa" : ""; }, [isApp]);
   useEffect(() => { if (top === "index") navigate("/", { replace: true }); }, [top]);
-  if (top === "index") return null;
   const personalRoot = top === "personal" && parts.length === 1 || onPersonalHost() && top === "";
   const businessRoot = top === "business" && parts.length === 1;
   const page = top === "book" && parts.length >= 2 ? <Book /> : personalRoot ? <PersonalHome /> : businessRoot ? <Home /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
+  const known = personalRoot || businessRoot || isBusinessSection(top) && parts.length <= 1 || ["signin", "signup", "app", "book"].includes(top);
+  const kind = personalRoot ? "personal" : !known ? "missing" : isApp || top === "book" || top === "signup" && query.toString() !== "" ? "private" : top === "signin" || top === "signup" ? "auth" : "business";
+  useEffect(() => { updateSeo(kind, location.pathname, onPersonalHost()); }, [kind, parts.join("/")]); // eslint-disable-line
+  if (top === "index") return null;
   return <Suspense fallback={<div className="min-h-screen" />}>{page}</Suspense>;
 }
 
