@@ -62,7 +62,7 @@ export default function PersonalOnboarding() {
     <div className="melo-app grid min-h-dvh bg-white lg:grid-cols-[640px_1fr]">
       <div className="flex min-h-dvh flex-col px-6 py-8 sm:px-20 sm:py-12">
         <header className="flex items-center justify-between">
-          <Link to="/" aria-label="Melo home"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-7 w-auto" /></Link>
+          <Link to="/" aria-label="Melo home"><img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto" /></Link>
           {STEP_NO[step] && <span className="text-[12px] text-ink-3">Step {STEP_NO[step]} of 4</span>}
         </header>
         <main key={step} className="my-auto flex w-full max-w-[440px] flex-col gap-5 py-10 animate-fade-up">
@@ -336,7 +336,7 @@ function Done({ s, soon }: P) {
   return (
     <div className="melo-app flex min-h-dvh items-start justify-center bg-[linear-gradient(180deg,#f1e289_0%,#f7efbf_45%,#fffdf5_100%)] px-4 py-6 sm:py-10">
       <div className="flex w-full max-w-[660px] flex-col items-center gap-6 rounded-[28px] bg-white px-6 py-10 text-center shadow-[0_1px_2px_rgba(0,0,0,.05),0_20px_40px_-20px_rgba(0,0,0,.15)] animate-pop sm:px-12">
-        <img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-7 w-auto" />
+        <img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto" />
         <span className="flex size-[72px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,#fbf6dc,#f1e289)] text-white animate-tick"><Icon name="check" className="size-8" /></span>
         <div className="flex flex-col gap-2"><h1 className="text-[28px] leading-[34px] font-medium tracking-[-0.01em]">You’re all set{first ? `, ${first}` : ""}</h1><p className="text-[14px] text-ink-sec">Your inbox is already sorting itself. Finish the last step whenever you like.</p></div>
         <ul className="flex w-full max-w-[420px] flex-col gap-2 text-left">

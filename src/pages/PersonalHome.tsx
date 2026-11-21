@@ -165,8 +165,8 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
   };
   return (
     <header className={cx("sticky top-0 z-40 transition-[background-color,box-shadow] duration-300", scrolled ? "bg-white/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur" : "bg-[#f3e48f]")}>
-      <nav aria-label="Main" className="mx-auto flex h-14 max-w-[1440px] lg:h-[76px] items-center gap-3 px-4 md:gap-8 md:px-16">
-        <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[26px] w-auto md:h-[30px]" /></Link>
+      <nav aria-label="Main" className="mx-auto flex h-14 max-w-[1440px] lg:h-[76px] items-center gap-3 px-5 md:gap-8 md:px-16">
+        <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={63} height={17} className="h-[17px] w-auto" /></Link>
         <ul className="hidden items-center gap-0.5 lg:flex">
           {Object.entries(menus).map(([name, items]) => (
             <li key={name} className="relative" data-pmenu="">
@@ -276,7 +276,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
   return (
     <footer className="border-t border-line px-6 pt-16 pb-12 md:px-16">
       <div className="mx-auto flex max-w-[1312px] flex-col gap-10 md:flex-row md:gap-12">
-        <div className="flex flex-col gap-3.5"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[30px] w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
+        <div className="flex flex-col gap-3.5"><img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
         <span className="hidden flex-1 md:block" />
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
           {col("Product", [["Primary", go("product")], ["Screener", go("product")], ["Later", go("product")], ["Summaries", go("product")], ["Melo for Business", businessHome()], ["Pricing", go("pricing")]])}
