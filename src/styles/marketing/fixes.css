@@ -1,0 +1,36 @@
+:root { --text-secondary: #4f4f4f; --text-tertiary: #6b6b6b; }
+.logo-img { display: block; width: 150px; height: auto; }
+.mm-head .logo-img { width: 140px; }
+.site-header .logo-img { transition: filter .2s; }
+.site-header:not(.scrolled) .logo-img { filter: brightness(0) invert(1); }
+.btn-ghost { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.75); }
+.mf-desc { font-size: 13.5px; line-height: 19px; }
+.promo-dark .eyebrow { color: rgba(255,255,255,.75); }
+.hero-sub { color: #fff; text-shadow: 0 1px 2px rgba(10,60,130,.18); line-height: 28px; }
+.hero-note { font-size: 14px; line-height: 20px; color: #fff; font-weight: 500; text-shadow: none; } .hero-note a { text-shadow: none; }
+.lede { text-wrap: pretty; }
+.person span { color: rgba(255,255,255,.78); }
+.security h2 { line-height: 46px; }
+.security .copy p { line-height: 27px; }
+.comparison .head-block .lede, .pricing .head-block .lede { line-height: 28px; }
+.price span, .plan-desc { font-size: 14px; }
+.featured .price span, .featured .plan-desc { color: rgba(255,255,255,.75); }
+.faq-a p { font-size: 15px; line-height: 23px; }
+.final-card p { line-height: 26px; color: #fff; }
+.fcol { font-size: 14px; line-height: 20px; }
+.footer-bottom { font-size: 13px; }
+@media (max-width: 960px) {
+  .hero-sub { line-height: 24px; }
+  .security h2 { line-height: 36px; }
+  .comparison .head-block .lede, .pricing .head-block .lede { line-height: 23px; }
+}
+.site-header .nav-link, .site-header .nav-link .icon, .site-header .nav-signin, .site-header .nav-toggle { transition: color .2s, background .15s; }
+.site-header:not(.scrolled) .nav-link, .site-header:not(.scrolled) .nav-link .icon, .site-header:not(.scrolled) .nav-signin, .site-header:not(.scrolled) .nav-toggle { color: #fff; }
+.site-header:not(.scrolled) .nav-link:hover, .site-header:not(.scrolled) .nav-item.open .nav-link, .site-header:not(.scrolled) .nav-toggle { background: rgba(255,255,255,.16); }
+
+.btn, .btn-lg, .nav .btn, .vs-foot .btn, .final-card .btn { height: 32px; padding: 0 12px; gap: 6px; font-weight: 500; font-size: 14px; line-height: 20px; }
+.btn .icon { width: 16px; height: 16px; }
+.btn-ghost { border: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.75); }
+.hero-ctas { gap: 8px; }
+.mm-cta .btn { height: 40px; }
+@media (max-width: 960px) { .hero-ctas .btn-lg { height: 40px; } }

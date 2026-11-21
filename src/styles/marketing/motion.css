@@ -1,0 +1,151 @@
+/* Motion layer for the product previews: scroll and click feedback. Loaded by features.js. */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ---------- press feedback ---------- */
+  .btn, .nav-signin, .rail-tab, .side-row, .mrow, .seg button, .pill, .icon-btn, .chip,
+  .bk-grid button.av, .bk-times button, .url-chip, .faq-q, .feat-item, .mega-feature, .mega-link,
+  .sf-col a, .sw {
+    transition-property: background, color, box-shadow, transform, opacity;
+    transition-duration: .18s;
+    transition-timing-function: var(--ease-out);
+  }
+  .btn:active, .nav-signin:active, .rail-tab:active, .side-row:active, .seg button:active, .pill:active,
+  .icon-btn:active, .bk-grid button.av:active, .bk-times button:active, .url-chip:active, .mega-feature:active {
+    transform: scale(.96);
+    transition-duration: .08s;
+  }
+  .mrow:active { transform: scale(.985); transition-duration: .08s; }
+  .faq-q:active, .feat-item:active { transform: scale(.99); transition-duration: .08s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0) scale(.96); }
+
+  /* ---------- hero ---------- */
+  .hero h1, .hero-sub, .hero-ctas, .hero-note { animation: m-rise .9s var(--ease-out) both; }
+  .hero-sub { animation-delay: .08s; }
+  .hero-ctas { animation-delay: .16s; }
+  .hero-note { animation-delay: .22s; }
+  .hero-shot { transform-origin: 50% 0; will-change: transform; animation: m-shot 1.2s var(--ease-out) .25s both; }
+  .hero-shot.m-tilt { animation: none; }
+
+  /* ---------- scroll reveals ---------- */
+  .reveal { opacity: 0; transform: translateY(32px); filter: blur(6px); transition: opacity .9s var(--ease-out), transform .9s var(--ease-out), filter .9s var(--ease-out); }
+  .reveal.in { opacity: 1; transform: none; filter: none; }
+  .reveal .checks li, .reveal .vs-list li, .reveal .feat-item { opacity: 0; transform: translateY(14px); }
+  .reveal.in .checks li, .reveal.in .vs-list li, .reveal.in .feat-item { animation: m-rise .7s var(--ease-out) both; }
+  .reveal.in :is(.checks, .vs-list, .feat-list) > :nth-child(1) { animation-delay: .25s; }
+  .reveal.in :is(.checks, .vs-list, .feat-list) > :nth-child(2) { animation-delay: .33s; }
+  .reveal.in :is(.checks, .vs-list, .feat-list) > :nth-child(3) { animation-delay: .41s; }
+  .reveal.in :is(.checks, .vs-list, .feat-list) > :nth-child(4) { animation-delay: .49s; }
+  .vs-tick { transition: transform .4s var(--ease-spring); }
+  .reveal.in .vs-tick { animation: m-pop .5s var(--ease-spring) both; animation-delay: inherit; }
+  .faq-item.m-in { animation: m-rise .7s var(--ease-out) both; animation-delay: calc(var(--m-i, 0) * 70ms); }
+  .faq-item.m-wait { opacity: 0; }
+  .sf-col.m-wait { opacity: 0; }
+  .sf-col.m-in { animation: m-rise .8s var(--ease-out) both; animation-delay: calc(var(--m-i, 0) * 80ms); }
+  .visual { will-change: transform; }
+
+  /* ---------- mail preview ---------- */
+  .app-list { position: relative; }
+  .m-hl { position: absolute; left: 0; top: 0; height: 36px; border-radius: 8px; background: var(--accent-soft); pointer-events: none; z-index: 0;
+    transition: transform .45s var(--ease-spring), width .3s var(--ease-out), opacity .2s; }
+  .m-hl::before { content: ""; position: absolute; left: 0; top: 8px; width: 2px; height: 20px; border-radius: 2px; background: var(--accent-base); }
+  .m-hl.m-jump { transition: none; }
+  #mail-rows .mrow { z-index: 1; }
+  #mail-rows.m-slide .mrow.active { background: transparent; }
+  #mail-rows.m-slide .mrow.active::before { display: none; }
+  #mail-rows[data-act="seg"] .mrow, #mail-rows[data-act="seg"] .group { animation: m-row .5s var(--ease-out) both; }
+  #mail-rows[data-act="seg"] > :nth-child(2) { animation-delay: .03s; }
+  #mail-rows[data-act="seg"] > :nth-child(3) { animation-delay: .06s; }
+  #mail-rows[data-act="seg"] > :nth-child(4) { animation-delay: .09s; }
+  #mail-rows[data-act="seg"] > :nth-child(5) { animation-delay: .12s; }
+  #mail-rows[data-act="seg"] > :nth-child(6) { animation-delay: .15s; }
+  #mail-rows[data-act="seg"] > :nth-child(7) { animation-delay: .18s; }
+  #mail-rows[data-act="seg"] > :nth-child(n+8) { animation-delay: .21s; }
+  #mail-rows .mrow .u { transition: transform .3s var(--ease-spring); }
+  #mail-rows .mrow:not(.unread) .u { transform: scale(0); }
+  .seg { position: relative; }
+  .seg .m-seg { position: absolute; top: 2px; left: 0; height: 22px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08); transition: transform .4s var(--ease-spring), width .3s var(--ease-out); pointer-events: none; }
+  .seg.m-on button.on { background: transparent; box-shadow: none; }
+  .seg button { position: relative; z-index: 1; }
+  #reader .thread > *, #reader .read-bar, #reader .reply { animation: m-rise .5s var(--ease-out) both; }
+  #reader .thread > :nth-child(2) { animation-delay: .04s; }
+  #reader .thread > :nth-child(3) { animation-delay: .08s; }
+  #reader .thread > :nth-child(4) { animation-delay: .12s; }
+  #reader .thread > :nth-child(n+5) { animation-delay: .16s; }
+  #reader .reply { animation-delay: .2s; }
+  #reader .summary { position: relative; overflow: hidden; }
+  #reader .summary::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%); transform: translateX(-100%); animation: m-shine 1.1s var(--ease-out) .25s both; }
+  .pill.done { animation: m-pop .45s var(--ease-spring); }
+  .pill.done .icon { animation: m-pop .5s var(--ease-spring) .05s both; }
+  .rail-tab .rail-count, .side-row .n { transition: transform .3s var(--ease-spring); }
+  .m-bump { animation: m-bump .45s var(--ease-spring); }
+
+  /* ---------- feature tabs ---------- */
+  .feat-item { position: relative; }
+  .feat-item::after { content: ""; position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--text-primary); transform: scaleX(0); transform-origin: 0 50%; opacity: 0; }
+  .feat.m-auto .feat-item.active::after { opacity: 1; animation: m-fill 6s linear both; }
+  .feat-stage { transform: translateY(24px) scale(.97); filter: blur(8px); transition: opacity .6s var(--ease-out), transform .7s var(--ease-out), filter .6s var(--ease-out); }
+  .feat-stage.active { transform: none; filter: none; }
+  .feat-panel { transition: background .6s var(--ease-out); }
+
+  /* ---------- rules card ---------- */
+  .sw::after { transition: left .35s var(--ease-spring), width .2s var(--ease-out); }
+  .sw:active::after { width: 15px; }
+  .sw.on:active::after { left: 9px; }
+  .rule { transition: background .3s var(--ease-out); }
+  .rule .t b, .rule .t span { transition: color .3s var(--ease-out); }
+  .rule.m-flash { animation: m-flash .7s var(--ease-out); }
+  .rule .badge { transition: opacity .3s var(--ease-out); }
+  .rule.off .badge { opacity: .45; }
+  #rules-card .rule { opacity: 0; transform: translateX(-12px); }
+  #rules-card.m-play .rule { animation: m-slide .6s var(--ease-out) both; }
+  #rules-card.m-play .rule:nth-child(2) { animation-delay: .08s; }
+  #rules-card.m-play .rule:nth-child(3) { animation-delay: .16s; }
+  #rules-card.m-play .rule:nth-child(4) { animation-delay: .24s; }
+  #rules-card.m-play .rule:nth-child(5) { animation-delay: .32s; }
+
+  /* ---------- booking widget ---------- */
+  #booker[data-act="day"] .bk-grid .sel { animation: m-pop .4s var(--ease-spring); }
+  #booker[data-act="day"] .bk-times > *, #booker.m-play .bk-times > * { animation: m-rise .45s var(--ease-out) both; }
+  #booker .bk-times > :nth-child(2) { animation-delay: .03s; }
+  #booker .bk-times > :nth-child(3) { animation-delay: .06s; }
+  #booker .bk-times > :nth-child(4) { animation-delay: .09s; }
+  #booker .bk-times > :nth-child(5) { animation-delay: .12s; }
+  #booker .bk-times > :nth-child(6) { animation-delay: .15s; }
+  #booker .bk-times > :nth-child(7) { animation-delay: .18s; }
+  #booker .bk-times > :nth-child(8) { animation-delay: .21s; }
+  #booker[data-act="day"] .bk-times-h { animation: m-rise .4s var(--ease-out) both; }
+  #booker[data-act="slot"] .pair > * { animation: m-split .4s var(--ease-spring) both; }
+  #booker[data-act="slot"] .pair .c { animation-delay: .05s; }
+  #booker[data-act="confirm"] .booked { animation: m-pop .5s var(--ease-spring) both; }
+  #booker[data-act="confirm"] .booked .icon { animation: m-pop .5s var(--ease-spring) .1s both; }
+  .url-chip .copied { display: inline-block; transform: translateY(4px); transition: opacity .25s var(--ease-out), transform .35s var(--ease-spring); }
+  .url-chip .copied.show { transform: none; }
+
+  /* ---------- FAQ ---------- */
+  .faq-a { transition: grid-template-rows .45s var(--ease-out); }
+  .faq-a p { opacity: 0; transform: translateY(-6px); transition: opacity .35s var(--ease-out), transform .45s var(--ease-out); }
+  .faq-item.open .faq-a p { opacity: 1; transform: none; transition-delay: .08s; }
+  .faq-q .icon { transition: transform .45s var(--ease-spring) !important; }
+  .faq-item { transition: background .25s var(--ease-out), transform .25s var(--ease-out); }
+  .faq-item:hover { transform: translateY(-1px); }
+
+  /* ---------- menus ---------- */
+  .mega { transition-timing-function: var(--ease-out) !important; }
+}
+
+@keyframes m-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes m-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes m-slide { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+@keyframes m-pop { 0% { transform: scale(.6); opacity: 0; } 60% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes m-bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes m-split { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+@keyframes m-shine { to { transform: translateX(100%); } }
+@keyframes m-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes m-flash { 0% { background: var(--accent-soft); } 100% { background: transparent; } }
+@keyframes m-shot { from { opacity: 0; transform: perspective(1800px) translateY(60px) rotateX(14deg) scale(.94); } to { opacity: 1; transform: perspective(1800px) rotateX(9deg) scale(.96); } }

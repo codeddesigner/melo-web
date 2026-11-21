@@ -1,0 +1,64 @@
+/* Tailwind (theme + utilities only — the marketing pages bring their own base styles) */
+@layer site, theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@font-face { font-family: "Calamantus"; src: url("/fonts/Calamantus-Regular.woff") format("woff"); font-weight: 300 400; font-display: swap; }
+@font-face { font-family: "Calamantus"; src: url("/fonts/Calamantus-Medium.woff") format("woff"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Calamantus"; src: url("/fonts/Calamantus-SemiBold.woff") format("woff"); font-weight: 600 900; font-display: swap; }
+
+/* Melo design tokens (Figma variables) */
+@theme {
+  --font-sans: "Calamantus", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-ink: #202020;
+  --color-ink-2: #4f4f4f;
+  --color-ink-3: #6b6b6b;
+  --color-ink-4: #b5b5b5;
+  --color-icon: #3a3a3a;
+  --color-icon-2: #8a8a8a;
+  --color-app: #f7f7f7;
+  --color-surface: #ffffff;
+  --color-subtle: #fafafa;
+  --color-hover: #f0f0f0;
+  --color-active: #ebebeb;
+  --color-inverse: #1a1a1a;
+  --color-line: #eeeeee;
+  --color-line-2: #e0e0e0;
+  --color-accent: #1b87f5;
+  --color-accent-ink: #0d6bd0;
+  --color-accent-soft: #e8f2fe;
+  --color-ok: #2ea44f;
+  --color-ok-soft: #e3f6e8;
+  --color-warn: #c77700;
+  --color-warn-soft: #fff4e0;
+  --color-bad: #d93025;
+  --color-bad-soft: #fdecea;
+  --color-tag-blue: #1e5a96;
+  --color-tag-green: #1f6b3a;
+  --color-tag-purple: #5b3fbf;
+  --color-tag-orange: #9a4b0f;
+  --color-tag-pink: #a3336b;
+  --shadow-pop: 0 0 0 1px rgba(0,0,0,.06), 0 12px 32px -8px rgba(0,0,0,.18);
+  --shadow-modal: 0 0 0 1px rgba(0,0,0,.06), 0 24px 48px -12px rgba(0,0,0,.24);
+  --animate-fade-up: fade-up .28s cubic-bezier(.22,1,.36,1) both;
+  --animate-pop: pop .2s cubic-bezier(.34,1.56,.64,1) both;
+  @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+}
+
+/* Base for the app (scoped so it never touches the marketing pages) */
+@layer base {
+  .melo-app, .melo-app * { box-sizing: border-box; }
+  .melo-app { font-family: var(--font-sans); font-size: 14px; line-height: 20px; color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+  .melo-app :where(h1, h2, h3, h4, h5, p, ul, ol, figure) { margin: 0; padding: 0; }
+  .melo-app :where(ul, ol) { list-style: none; }
+  .melo-app :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+  .melo-app :where(button:disabled) { cursor: default; }
+  .melo-app :where(input, textarea, select) { font: inherit; color: inherit; margin: 0; border: 0 solid; background: transparent; outline: none; }
+  .melo-app :where(*) { border-width: 0; border-style: solid; border-color: var(--color-line); }
+  .melo-app :where(a) { color: inherit; text-decoration: none; }
+  .melo-app :where(svg) { flex-shrink: 0; }
+  .melo-app :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 6px; }
+  .melo-app ::placeholder { color: var(--color-ink-3); opacity: 1; }
+  .melo-scroll { scrollbar-width: thin; scrollbar-color: #d6d6d6 transparent; }
+}
