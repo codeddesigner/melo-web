@@ -165,7 +165,7 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
   };
   return (
     <header className={cx("sticky top-0 z-40 transition-[background-color,box-shadow] duration-300", scrolled ? "bg-white/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur" : "bg-[#f3e48f]")}>
-      <nav aria-label="Main" className="mx-auto flex h-[76px] max-w-[1440px] items-center gap-3 px-4 md:gap-8 md:px-16">
+      <nav aria-label="Main" className="mx-auto flex h-14 max-w-[1440px] lg:h-[76px] items-center gap-3 px-4 md:gap-8 md:px-16">
         <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[26px] w-auto md:h-[30px]" /></Link>
         <ul className="hidden items-center gap-0.5 lg:flex">
           {Object.entries(menus).map(([name, items]) => (
@@ -182,11 +182,11 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
           <li><button type="button" onClick={() => scrollTo("pricing")} className="flex h-9 items-center rounded-full px-3 text-[14px] font-medium hover:bg-black/5">Pricing</button></li>
         </ul>
         <span className="flex-1" />
-        <SiteToggle current="personal" className="hidden sm:grid" />
+        <SiteToggle current="personal" className="hidden xl:grid" />
         {!signedIn && <Link to="/signin" className="hidden text-[14px] font-medium hover:underline md:block">Sign in</Link>}
         <Link to={start} className="flex h-10 shrink-0 items-center rounded-full bg-inverse px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#333]">{startLabel}</Link>
       </nav>
-      <div className="flex justify-center pb-3 sm:hidden"><SiteToggle current="personal" /></div>
+      <div className="flex justify-center pb-3 xl:hidden"><SiteToggle current="personal" /></div>
     </header>
   );
 }
