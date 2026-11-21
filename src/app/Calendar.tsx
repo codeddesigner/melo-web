@@ -72,8 +72,8 @@ export default function Calendar() {
       </SideNav>
       {booking ? <BookingLinksPage links={links} /> : <>
       <Panel>
-        <header className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-3 md:px-5">
-          <h2 key={title} className="mr-2 text-[18px] font-medium animate-fade-in">{title}</h2>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 md:px-6 border-b border-line">
+          <h2 key={title} className="mr-2 truncate text-[20px] leading-[26px] font-medium tracking-[-.3px] animate-fade-in">{title}</h2>
           <Button variant="soft" size="s" onClick={() => setAnchor(new Date())}>Today</Button>
           <IconButton icon="chev-left" label="Previous" onClick={() => step(-1)} />
           <IconButton icon="chev-right" label="Next" onClick={() => step(1)} />

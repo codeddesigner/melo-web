@@ -40,11 +40,9 @@ export function BookingLinksPage({ links }: { links: ReturnType<typeof useAsync<
   };
   return (
     <Panel className="flex-row">
-      <div className="melo-scroll min-w-0 flex-1 overflow-y-auto px-6 pt-8 pb-12 md:px-10">
-        <div className="flex items-start gap-4">
-          <div className="flex-1"><h2 className="text-[20px] leading-[26px] font-medium tracking-[-.3px]">Booking links</h2><p className="mt-1.5 text-[13px] text-ink-2">Share a link and let people pick a time that works. Bookings land in your calendar.</p></div>
-          <Button icon="plus" onClick={() => setCreating(true)} disabled={!handle}>New link</Button>
-        </div>
+      <div className="melo-scroll min-w-0 flex-1 overflow-y-auto px-4 pb-12 md:px-6">
+        <div className="flex h-16 items-center gap-4"><h2 className="flex-1 text-[20px] leading-[26px] font-medium tracking-[-.3px]">Booking links</h2><Button icon="plus" onClick={() => setCreating(true)} disabled={!handle}>New link</Button></div>
+        <p className="-mt-2 text-[13px] text-ink-2">Share a link and let people pick a time that works. Bookings land in your calendar.</p>
         {!handle ? (
           <div className="mt-6 rounded-2xl border border-line bg-white p-5 text-sm">Booking pages live at <b className="font-medium">melo.to/book/you</b>, so they need a Melo address. <button type="button" className="font-medium text-accent-ink hover:underline" onClick={() => navigate("/app/settings/profile")}>Claim yours in Settings</button>.</div>
         ) : <>
@@ -92,10 +90,10 @@ function Availability() {
   const save = async () => { if (!f) return; try { await api.saveBookingSettings(f); setDirty(false); toast("Availability saved"); } catch (e) { toast((e as Error).message, "bad"); } };
   const day = (i: number) => f?.hours[String(i + 1)];
   return (
-    <aside className="melo-scroll hidden w-[320px] shrink-0 overflow-y-auto border-l border-line bg-white px-5 pt-8 pb-10 xl:block">
-      <div className="flex items-center"><h3 className="flex-1 text-[15px] font-medium">Availability</h3>{dirty && <Button size="s" onClick={save}>Save</Button>}</div>
+    <aside className="melo-scroll hidden w-[320px] shrink-0 overflow-y-auto border-l border-line bg-white px-5 pb-10 xl:block">
+      <div className="flex h-16 items-center"><h3 className="flex-1 text-[15px] font-medium">Availability</h3>{dirty && <Button size="s" onClick={save}>Save</Button>}</div>
       {!f ? <Skeleton className="mt-4 h-40" /> : <>
-        <label className="mt-4 flex h-10 items-center gap-2 rounded-xl border border-line px-3 text-[13px]"><Icon name="globe" className="size-4 text-icon-2" />
+        <label className="flex h-10 items-center gap-2 rounded-xl border border-line px-3 text-[13px]"><Icon name="globe" className="size-4 text-icon-2" />
           <select aria-label="Time zone" value={f.tz} onChange={(e) => up({ tz: (e.target as HTMLSelectElement).value })} className="min-w-0 flex-1 bg-transparent outline-none">
             {(ZONES.length ? ZONES : [f.tz]).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
           </select></label>

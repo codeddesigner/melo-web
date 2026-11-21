@@ -140,8 +140,7 @@ export function CustomDomainPage() {
   const cp = (v: string) => { copy(v); toast("Copied"); };
   return (
     <>
-      <div className="flex items-center gap-1.5 px-6 pt-6 text-[13px] text-ink-3 md:px-10"><button type="button" onClick={remove} className="hover:text-ink">Custom domain</button><Icon name="chev-right" className="size-3.5" /><span className="font-medium text-ink">{domain}</span></div>
-      <Header title={`Verify ${domain}`} sub="Add these records at your DNS provider. We check automatically every few minutes — most changes show up within an hour." action={<Tag tone="warn" icon="clock">0 of 4 found</Tag>} />
+      <Header title={`Verify ${domain}`} sub={<>Add these records at your DNS provider. We check automatically every few minutes — most changes show up within an hour. <button type="button" onClick={remove} className="font-medium text-accent-ink hover:underline">Use a different domain</button></>} action={<Tag tone="warn" icon="clock">0 of 4 found</Tag>} />
       <Body>
         <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-pa-soft px-5 py-4">
           <span className="flex size-9 items-center justify-center rounded-lg bg-white text-[12px] font-semibold text-ink-2">DNS</span>

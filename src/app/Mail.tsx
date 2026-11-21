@@ -120,7 +120,7 @@ export default function Mail() {
       <Panel className="flex-row">
         <div className={cx("flex min-w-0 flex-col", open ? "hidden min-w-[360px] flex-1 border-r border-line lg:flex" : "flex-1")}>
           <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
-            <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
+            <h2 className="text-[20px] leading-[26px] font-medium tracking-[-.3px] capitalize">{folder}</h2>
             {personal && folder === "inbox" && <div role="tablist" aria-label="Inbox view" className="flex rounded-full bg-subtle p-0.5 text-[13px] shadow-[inset_0_0_0_1px_var(--color-line)]">
               {([["primary", "Primary", primary.filter((m) => !m.read_at).length], ["other", "Everything else", other.filter((m) => !m.read_at).length]] as const).map(([k, l, n]) => (
                 <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); if (openId) navigate("/app/mail/inbox"); }} className={cx("flex h-7 items-center gap-1.5 rounded-full px-3", tab === k ? "bg-white font-medium shadow-[0_1px_2px_rgba(0,0,0,.08)]" : "text-ink-2 hover:text-ink")}>{l}{n > 0 && <span className="text-[11px] text-ink-3">{n}</span>}</button>))}

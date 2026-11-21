@@ -82,8 +82,8 @@ export default function Work() {
         {tags.map(([g, n]) => <SideItem key={g} to={`/app/work/${view}?tag=${encodeURIComponent(g)}`} dot={colorFor(g)} label={g} count={n} active={tag === g} />)}
       </SideNav>
       <Panel>
-        <header className="flex flex-wrap items-center gap-3 px-4 pt-5 pb-3 md:px-6">
-          <h2 className="flex items-center gap-2 text-[20px] font-medium tracking-[-.3px]">{project && <span className="size-2.5 rounded-full" style={{ background: PCOLORS[project.color] }} />}{title}</h2>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4 md:px-6 gap-3">
+          <h2 className="flex min-w-0 items-center gap-2 truncate text-[20px] leading-[26px] font-medium tracking-[-.3px]">{project && <span className="size-2.5 rounded-full" style={{ background: PCOLORS[project.color] }} />}{title}</h2>
           <div className="flex rounded-full bg-hover p-0.5">
             {(["list", "board", "calendar"] as const).map((l) => (
               <button key={l} type="button" aria-pressed={layout === l} onClick={() => setLayout(l)} className={cx("flex h-7 items-center gap-1.5 rounded-full px-3 text-sm capitalize", layout === l ? "bg-white font-medium shadow-sm" : "text-ink-2 hover:text-ink")}><Icon name={l === "list" ? "list" : l === "board" ? "board" : "calendar"} className="size-4" />{l}</button>

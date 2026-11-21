@@ -121,7 +121,7 @@ function ActivityView({ view, chName, chPath, nameOf, mentions, threads }: { vie
   const replies = (id: string) => (threads.data ?? []).filter((m) => m.parent_id === id);
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-6"><h2 className="text-[17px] font-medium">{VIEWS[view]}</h2><span className="flex-1" /><IconButton icon="refresh" label="Refresh" onClick={() => { src.reload(); threads.reload(); }} /></header>
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4 md:px-6"><h2 className="text-[20px] leading-[26px] font-medium tracking-[-.3px]">{VIEWS[view]}</h2><span className="flex-1" /><IconButton icon="refresh" label="Refresh" onClick={() => { src.reload(); threads.reload(); }} /></header>
       <div className="melo-scroll flex-1 overflow-y-auto px-4 py-4">
         {src.loading && !src.data ? <div className="flex flex-col gap-2"><Skeleton className="h-14" /><Skeleton className="h-14" /></div>
           : !rows.length ? <Empty icon={view === "_huddles" ? "phone" : view === "_mentions" ? "at" : "comment"} title={view === "_huddles" ? "No huddles yet" : view === "_mentions" ? "No mentions yet" : "No threads yet"}
