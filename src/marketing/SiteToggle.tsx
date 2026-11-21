@@ -12,7 +12,12 @@ export function SiteToggle({ current, className, dark, full }: { current: "perso
   const [pos, setPos] = useState(last ?? current);
   useEffect(() => { const r = requestAnimationFrame(() => setPos(current)); last = current; return () => cancelAnimationFrame(r); }, [current]);
   const go = (href: string) => (e: MouseEvent<HTMLAnchorElement>) => {
-    if (href.startsWith("/") && !e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(href); }
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    if (href.startsWith("/")) return navigate(href);
+    /* The other site is on its own domain: slide the pill across first, then go */
+    setPos(pos === "personal" ? "business" : "personal");
+    window.setTimeout(() => location.assign(href), 260);
   };
   const item = (key: "personal" | "business", label: string, href: string) => (
     <a href={href} onClick={go(href)} aria-current={current === key ? "page" : undefined}
