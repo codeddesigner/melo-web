@@ -224,7 +224,7 @@ const QA: [string, string][] = [
 
 function Footer({ soon }: { soon: (w: string) => void }) {
   const col = (title: string, links: [string, (() => void) | string][]) => (
-    <div className="flex min-w-0 flex-col gap-3 text-[13px] leading-[18px] md:w-[150px]"><b className="font-semibold">{title}</b>
+    <div className="flex min-w-0 flex-col gap-3 text-[13px] leading-[18px] lg:w-[150px]"><b className="font-semibold">{title}</b>
       {links.map(([t, a]) => typeof a === "string" ? <a key={t} href={a} className="text-ink-sec hover:text-ink">{t}</a> : <button key={t} type="button" onClick={a} className="text-left text-ink-sec hover:text-ink">{t}</button>)}</div>
   );
   const top = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -234,7 +234,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
       <div className="mx-auto flex max-w-[1312px] flex-col gap-10 md:flex-row md:gap-12">
         <div className="flex flex-col gap-3.5"><img src="/logo-mail.svg" alt="Melo Mail" width={96} height={21} className="h-[21px] w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
         <span className="hidden flex-1 md:block" />
-        <div data-pm-stagger="" className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
+        <div data-pm-stagger="" className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:gap-12">
           {col("Product", [["Primary", go("product")], ["Screener", go("product")], ["Later", go("product")], ["Summaries", go("product")], ["Melo for Business", businessHome()], ["Pricing", go("pricing")]])}
           {col("Company", [["About", () => soon("About")], ["For Business", businessHome()], ["Careers", () => soon("Careers")], ["Blog", () => soon("The blog")], ["Press", () => soon("Press")]])}
           {col("Resources", [["Help center", go("faq")], ["Guides", () => soon("Guides")], ["Status", () => soon("Status")], ["Security", go("features")]])}
