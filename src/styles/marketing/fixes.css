@@ -60,3 +60,10 @@
 .btn-lg, .hero .btn, .vs-foot .btn-lg, .final-card .btn-lg { height: 54px; padding: 0 24px; font-size: 15px; line-height: 22px; }
 .hero-ctas, .hero .ctas { gap: 12px; }
 @media (max-width: 640px) { .btn-lg, .hero .btn { height: 48px; padding: 0 20px; } }
+
+/* ---------- One content edge (Figma grid: 64px gutters, 1312px column — same as Melo Personal) ---------- */
+@media (min-width: 1024px) {
+  .feat .container, .vs-grid, .faq-grid, .sf-inner { max-width: 1312px !important; margin-left: auto !important; margin-right: auto !important; }
+  .split { padding-left: 64px !important; padding-right: 64px !important; max-width: 1440px; margin-left: auto; margin-right: auto; }
+  .feat, .vs, .faq, .site-foot { padding-left: 64px !important; padding-right: 64px !important; }
+}

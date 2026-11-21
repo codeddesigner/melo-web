@@ -86,8 +86,8 @@ export default function PersonalHome() {
         </section>
 
         {/* Privacy */}
-        <section className="bg-app px-6 py-16 md:px-[120px] md:py-20">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
+        <section className="bg-app px-6 py-16 md:px-16 md:py-20">
+          <div className="mx-auto flex max-w-[1312px] flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
             <div className="flex flex-col gap-4 lg:w-[520px]">
               <h2 className={cx(H2, "text-[36px] leading-[1.05] md:text-[44px]")}>Private by design</h2>
               <p className="text-[18px] leading-[22px] text-ink-sec">Your mail is encrypted at rest and in transit. No ads, ever — we never sell your data or train AI on it.</p>
@@ -274,8 +274,8 @@ function Footer({ soon }: { soon: (w: string) => void }) {
   const top = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const go = (id: string) => () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   return (
-    <footer className="border-t border-line px-6 pt-16 pb-12 md:px-24">
-      <div className="mx-auto flex max-w-[1248px] flex-col gap-10 md:flex-row md:gap-12">
+    <footer className="border-t border-line px-6 pt-16 pb-12 md:px-16">
+      <div className="mx-auto flex max-w-[1312px] flex-col gap-10 md:flex-row md:gap-12">
         <div className="flex flex-col gap-3.5"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[30px] w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
         <span className="hidden flex-1 md:block" />
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
@@ -285,7 +285,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
           {col("Legal", [["Privacy", () => soon("The privacy page")], ["Terms", () => soon("The terms page")], ["DPA", () => soon("The DPA")], ["Cookies", () => soon("The cookie page")]])}
         </div>
       </div>
-      <div className="mx-auto mt-12 flex max-w-[1248px] items-center text-[12px] text-ink-3"><button type="button" onClick={top} className="flex-1 text-left">© 2026 Melo, Inc. All rights reserved.</button><span>English · USD</span></div>
+      <div className="mx-auto mt-12 flex max-w-[1312px] items-center text-[12px] text-ink-3"><button type="button" onClick={top} className="flex-1 text-left">© 2026 Melo, Inc. All rights reserved.</button><span>English · USD</span></div>
     </footer>
   );
 }
