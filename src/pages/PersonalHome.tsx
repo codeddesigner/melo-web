@@ -141,8 +141,8 @@ export default function PersonalHome() {
             <h2 className="font-display text-[38px] leading-[1.05] font-medium tracking-[-0.01em] text-white md:text-[60px]">Give your inbox some quiet.</h2>
             <p className="text-[17px] leading-[22px] text-white/90 md:text-[19px]">Claim your free @melo.to address, or bring Gmail, Outlook or iCloud.</p>
             <div className="flex flex-wrap justify-center gap-3">
-              <Link to={start} className={cx(BTN, "bg-white px-[26px] text-ink hover:bg-[#f2f2f2]")}>{startLabel}</Link>
-              <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/[.18] px-[26px] text-white hover:bg-white/25")}>Download the app</button>
+              <Link to={start} className={cx(BTN, "bg-white text-ink hover:bg-[#f2f2f2]")}>{startLabel}</Link>
+              <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/[.18] text-white hover:bg-white/25")}>Download the app</button>
             </div>
           </div>
         </section>
@@ -230,8 +230,8 @@ function Cell({ v, muted }: { v: boolean | string; muted?: boolean }) {
 function Plan({ name, badge, price, per, blurb, cta, to, onClick, items, dark }: { name: string; badge?: string; price: string; per: string; blurb: string; cta: string; to?: string; onClick?: () => void; items: string[]; dark?: boolean }) {
   const btn = cx("flex h-12 w-full items-center justify-center rounded-full text-[14px] font-semibold transition-colors", dark ? "bg-white text-ink hover:bg-[#eee]" : "bg-inverse text-white hover:bg-[#333]");
   return (
-    <div className={cx("flex flex-col gap-5 rounded-[24px] p-8", dark ? "bg-inverse text-white md:-mt-3 md:pb-11" : "bg-app")}>
-      <div className="flex items-center gap-2"><b className="font-display text-[22px] leading-[22px] font-medium">{name}</b>{badge && <span className="rounded-full bg-tag-purple-bg px-2.5 py-[3px] text-[12px] font-semibold text-ink-sec">{badge}</span>}</div>
+    <div className={cx("flex flex-col gap-5 rounded-[24px] p-8", dark ? "bg-inverse text-white" : "bg-app")}>
+      <div className="flex h-7 items-center gap-2"><b className="font-display text-[22px] leading-[22px] font-medium">{name}</b>{badge && <span className="rounded-full bg-tag-purple-bg px-2.5 py-[3px] text-[12px] font-semibold text-ink-sec">{badge}</span>}</div>
       <div className="flex items-baseline gap-2"><b className="font-display text-[48px] leading-[38px] font-medium tracking-[-0.01em]">{price}</b><span className={cx("text-[13px]", dark ? "text-ink-3" : "text-ink-sec")}>{per}</span></div>
       <p className={cx("text-[14px]", dark ? "text-ink-3" : "text-ink-sec")}>{blurb}</p>
       {to ? <Link to={to} className={btn}>{cta}</Link> : <button type="button" onClick={onClick} className={btn}>{cta}</button>}

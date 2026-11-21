@@ -53,3 +53,10 @@
 .hero-sub { font-size: clamp(17px, 1.4vw, 19px) !important; line-height: 1.5 !important; }
 .feat-title, .h-display, .vs-title, .faq-title { font-size: clamp(36px, 3.62vw, 52px) !important; line-height: 1.08 !important; letter-spacing: -0.015em !important; }
 .lede { font-size: clamp(17px, 1.4vw, 19px) !important; line-height: 1.5 !important; color: var(--text-secondary); }
+
+/* ---------- Button standard (shared with Melo Personal / Figma) ----------
+   Nav & regular: 40px, 16px sides, 14px semibold · Hero & form actions: 54px, 24px sides, 15px semibold */
+.btn, .nav .btn, .vs-foot .btn, .final-card .btn { height: 40px; padding: 0 16px; gap: 8px; font-weight: 600; font-size: 14px; line-height: 20px; }
+.btn-lg, .hero .btn, .vs-foot .btn-lg, .final-card .btn-lg { height: 54px; padding: 0 24px; font-size: 15px; line-height: 22px; }
+.hero-ctas, .hero .ctas { gap: 12px; }
+@media (max-width: 640px) { .btn-lg, .hero .btn { height: 48px; padding: 0 20px; } }
