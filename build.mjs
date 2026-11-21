@@ -87,6 +87,18 @@ ${siteLinks}
 `;
 fs.writeFileSync(path.join(out, "index.html"), html);
 fs.writeFileSync(path.join(out, "404.html"), html);
+/* melo.to gets the same app with Melo Personal's title and link previews */
+const personalHtml = html
+  .replace(/<title>[^<]*<\/title>/, "<title>Melo — Mail from people first. Everything else, later.</title>")
+  .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.">')
+  .replace('content="#1b87f5"', 'content="#f1e289"')
+  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Melo — a calm inbox for your personal email">')
+  .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Mail from people first. Everything else, later. Free forever.">')
+  .replace('content="https://business.melo.to/"', 'content="https://melo.to/"')
+  .replace('content="Melo for Business">\n<meta property="og:image"', 'content="Melo">\n<meta property="og:image"')
+  .replace(/<meta (property="og:image[^"]*"|name="twitter:image")[^>]*>\n/g, "")
+  .replace('content="summary_large_image"', 'content="summary"');
+fs.writeFileSync(path.join(out, "personal.html"), personalHtml);
 
 /* Routing (clean URLs, old .html redirects, SPA fallback) lives in ../vercel.json; a copy goes in dist for the local test server. */
 fs.copyFileSync(path.join(root, "vercel.json"), path.join(out, "vercel.json"));
