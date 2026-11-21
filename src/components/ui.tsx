@@ -200,7 +200,7 @@ function ModalBody({ onClose, title, children, footer, width, dialogRef }: { onC
 }
 
 /* Popover menu anchored to its trigger */
-export function Menu({ trigger, items, align = "right" }: { trigger: (open: () => void) => ReactNode; items: { label: string; icon?: IconName; danger?: boolean; onSelect: () => void; disabled?: boolean }[]; align?: "left" | "right" }) {
+export function Menu({ trigger, items, align = "right", up }: { trigger: (open: () => void) => ReactNode; items: { label: string; icon?: IconName; danger?: boolean; onSelect: () => void; disabled?: boolean }[]; align?: "left" | "right"; up?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -213,15 +213,15 @@ export function Menu({ trigger, items, align = "right" }: { trigger: (open: () =
   return (
     <div ref={ref} className="relative inline-flex">
       {trigger(() => setOpen((o) => !o))}
-      {open && <MenuList items={items} align={align} close={() => setOpen(false)} />}
+      {open && <MenuList items={items} align={align} up={up} close={() => setOpen(false)} />}
     </div>
   );
 }
-function MenuList({ items, align, close }: { items: { label: string; icon?: IconName; danger?: boolean; onSelect: () => void; disabled?: boolean }[]; align: "left" | "right"; close: () => void }) {
+function MenuList({ items, align, close, up }: { items: { label: string; icon?: IconName; danger?: boolean; onSelect: () => void; disabled?: boolean }[]; align: "left" | "right"; close: () => void; up?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useExitGhost(ref, "pop-out");
   return (
-    <div ref={ref} role="menu" className={cx("absolute top-full z-40 mt-1 min-w-[180px] origin-top rounded-2xl bg-white p-1.5 shadow-pop animate-pop", align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left")}>
+    <div ref={ref} role="menu" className={cx("absolute z-50 min-w-[180px] rounded-2xl bg-white p-1.5 shadow-pop animate-pop", up ? "bottom-full mb-1" : "top-full mt-1", align === "right" ? (up ? "right-0 origin-bottom-right" : "right-0 origin-top-right") : (up ? "left-0 origin-bottom-left" : "left-0 origin-top-left"))}>
       {items.map((it) => (
         <button key={it.label} role="menuitem" type="button" disabled={it.disabled} onClick={() => { close(); it.onSelect(); }}
           className={cx("flex h-8 w-full items-center gap-2 whitespace-nowrap rounded-xl px-2.5 text-left text-sm hover:bg-hover disabled:opacity-40", it.danger && "text-bad hover:bg-bad-soft")}>

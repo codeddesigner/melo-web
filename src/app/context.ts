@@ -16,6 +16,8 @@ export interface AppCtx {
   switchWorkspace: (id: string) => void;
   unread: Unread;
   setUnread: (u: Unread | ((prev: Unread) => Unread)) => void;
+  /* unread inbox mail per space id */
+  inboxes: Record<string, number>;
 }
 export const Ctx = createContext<AppCtx | null>(null);
 export function useApp(): AppCtx {

@@ -7,6 +7,7 @@ import { Icon } from "../components/icons";
 import { Avatar, Button, Empty, IconButton, Menu, Skeleton, Tag, useAsync, useExitGhost, useToast } from "../components/ui";
 import { useApp } from "./context";
 import { Panel, SideItem, SideLabel, SideNav, SideSearch } from "./AppRoot";
+import { SpaceList } from "./Spaces";
 
 type Folder = "inbox" | "later" | "newsletters" | "receipts" | "screener" | "updates" | "sent" | "drafts";
 const SORTED: { key: MailCategory; label: string; dot: string; blurb: string }[] = [
@@ -108,9 +109,8 @@ export default function Mail() {
         <SideItem to="/app/mail/drafts" icon="doc" label="Drafts" count={drafts.data?.length} active={folder === "drafts"} />
         {personal && <><SideLabel>Sorted by Melo</SideLabel>
           {SORTED.map((c) => <SideItem key={c.key} to={`/app/mail/${c.key}`} dot={c.dot} label={c.label} count={byCat(c.key).filter((m) => c.key === "screener" || !m.read_at).length || undefined} active={folder === c.key} />)}</>}
-        <SideLabel>Accounts</SideLabel>
-        {addr && <SideItem icon="mail" label={addr} onClick={() => navigate("/app/mail/sent")} />}
-        {account.email !== addr && <SideItem icon="mail" label={account.email} onClick={() => navigate("/app/mail/inbox")} />}
+        <SideLabel>Inboxes</SideLabel>
+        <SpaceList compact />
         <span className="flex-1" />
         {personal && <SortedCard count={all.filter((m) => cat(m) !== "primary" && Date.now() - Date.parse(m.created_at) < 86400_000).length} />}
         {!personal && <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">

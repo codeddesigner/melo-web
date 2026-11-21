@@ -22,6 +22,10 @@ const DARK = "flex h-11 w-full items-center justify-center gap-2 rounded-full bg
 
 interface State { email: string; name: string; address: string; filters: { newsletters: boolean; receipts: boolean; screener: boolean }; prefs: Record<string, unknown>; viaPassword: boolean }
 
+/* Land in the Personal space once it exists (the app remembers the last space you used) */
+const rememberPersonal = (id: string | null | undefined) => { if (id) try { localStorage.setItem("melo.workspace", id); } catch { /* ignore */ } };
+const openPersonal = (id: string) => { rememberPersonal(id); navigate("/app/mail", { replace: true }); };
+
 export default function PersonalOnboarding() {
   const session = useSession();
   const { query } = useLocation();
@@ -43,7 +47,10 @@ export default function PersonalOnboarding() {
     api.account().then((a) => {
       if (!a) return;
       up({ email: a.email, name: a.profile?.full_name ?? "", address: a.profile?.melo_address ? `${a.profile.melo_address}@melo.to` : "", prefs: a.profile?.prefs ?? {} });
-      if (a.profile?.melo_address) { if (!a.workspaces.some((w) => w.kind === "personal")) api.ensurePersonalSpace().catch(() => {}); navigate("/app/mail", { replace: true }); }
+      if (a.profile?.melo_address) {
+        const have = a.workspaces.find((w) => w.kind === "personal");
+        (have ? Promise.resolve(have.id) : api.ensurePersonalSpace()).then(openPersonal, () => navigate("/app/mail", { replace: true }));
+      }
       else setStep("pick");
     }, () => {});
   }, [session, step]);
@@ -62,7 +69,7 @@ export default function PersonalOnboarding() {
     <div className="melo-app grid min-h-dvh bg-white lg:grid-cols-[640px_1fr]">
       <div className="flex min-h-dvh flex-col px-6 py-8 sm:px-20 sm:py-12">
         <header className="flex items-center justify-between">
-          <Link to="/" aria-label="Melo home"><img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto" /></Link>
+          <Link to="/" aria-label="Melo home"><img src="/logo-mail.svg" alt="Melo Mail" width={96} height={21} className="h-[21px] w-auto" /></Link>
           {STEP_NO[step] && <span className="text-[12px] text-ink-3">Step {STEP_NO[step]} of 4</span>}
         </header>
         <main key={step} className="my-auto flex w-full max-w-[440px] flex-col gap-5 py-10 animate-fade-up">
@@ -147,7 +154,7 @@ function Verify({ s, go, back, afterAccount }: P) {
     try {
       await api.verifyCode(s.email, c);
       const a = await afterAccount();
-      if (a?.profile?.melo_address) { await api.ensurePersonalSpace().catch(() => {}); go("connect"); } else go("pick");
+      if (a?.profile?.melo_address) { await api.ensurePersonalSpace().then(rememberPersonal, () => {}); go("connect"); } else go("pick");
     } catch (e) { setErr((e as Error).message); setCode(""); setBusy(false); }
   };
   return <>
@@ -204,7 +211,7 @@ function Pick({ s, up, go, afterAccount }: P) {
     setBusy(true); setErr("");
     try {
       await api.updateProfile(claim ? { full_name: name.trim(), display_name: name.trim().split(/\s+/)[0], melo_address: u } : { full_name: name.trim(), display_name: name.trim().split(/\s+/)[0] });
-      await api.ensurePersonalSpace();
+      rememberPersonal(await api.ensurePersonalSpace());
       await afterAccount();
       up({ name: name.trim(), address: claim ? `${u}@melo.to` : "" });
       go("connect");
@@ -335,7 +342,7 @@ function Done({ s, soon }: P) {
   return (
     <div className="melo-app flex min-h-dvh items-start justify-center bg-[linear-gradient(180deg,#f1e289_0%,#f7efbf_45%,#fffdf5_100%)] px-4 py-6 sm:py-10">
       <div className="flex w-full max-w-[660px] flex-col items-center gap-6 rounded-[28px] bg-white px-6 py-10 text-center shadow-[0_1px_2px_rgba(0,0,0,.05),0_20px_40px_-20px_rgba(0,0,0,.15)] animate-pop sm:px-12">
-        <img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto" />
+        <img src="/logo-mail.svg" alt="Melo Mail" width={96} height={21} className="h-[21px] w-auto" />
         <span className="flex size-[72px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_30%,#fbf6dc,#f1e289)] text-white animate-tick"><Icon name="check" className="size-8" /></span>
         <div className="flex flex-col gap-2"><h1 className="text-[28px] leading-[34px] font-medium tracking-[-0.01em]">You’re all set{first ? `, ${first}` : ""}</h1><p className="text-[14px] text-ink-sec">Your inbox is already sorting itself. Finish the last step whenever you like.</p></div>
         <ul className="flex w-full max-w-[420px] flex-col gap-2 text-left">

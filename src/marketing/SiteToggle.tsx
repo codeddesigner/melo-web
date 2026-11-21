@@ -14,7 +14,13 @@ export function SiteToggle({ current, className, dark, full }: { current: "perso
   const go = (href: string) => (e: MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault();
-    if (href.startsWith("/")) return navigate(href);
+    if (href.startsWith("/")) {
+      /* Same page, new site: cross-fade while the switch stays put */
+      const d = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+      if (d.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) d.startViewTransition(() => { navigate(href); window.scrollTo(0, 0); });
+      else navigate(href);
+      return;
+    }
     /* The other site is on its own domain: slide the pill across first, then go */
     setPos(pos === "personal" ? "business" : "personal");
     window.setTimeout(() => location.assign(href), 260);
@@ -25,7 +31,7 @@ export function SiteToggle({ current, className, dark, full }: { current: "perso
         current === key ? "text-ink" : dark ? "text-ink-2 hover:text-ink" : "text-ink-2 hover:text-ink")}>{label}</a>
   );
   return (
-    <div role="group" aria-label="Choose Melo for you or your business" className={cx("site-toggle relative box-border grid h-8 shrink-0 grid-cols-2 rounded-full p-0.5", full ? "w-full" : "w-[156px]", dark ? "bg-black/10" : "bg-black/[.06]", className)}>
+    <div role="group" aria-label="Choose Melo for you or your business" style={{ viewTransitionName: full ? undefined : "site-toggle" }} className={cx("site-toggle relative box-border grid h-8 shrink-0 grid-cols-2 rounded-full p-0.5", full ? "w-full" : "w-[156px]", dark ? "bg-black/10" : "bg-black/[.06]", className)}>
       <span aria-hidden="true" className={cx("absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,.12)] transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]", pos === "business" ? "translate-x-full" : "translate-x-0")} style={{ left: 2 }} />
       {item("personal", "Personal", personalHome())}
       {item("business", "Business", businessHome())}

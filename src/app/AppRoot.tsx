@@ -3,9 +3,10 @@ import { api, auth, type Account, type Person } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
 import { useSession } from "../lib/session";
 import { cx } from "../lib/util";
-import { Icon, MeloMark, type IconName } from "../components/icons";
+import { Icon, type IconName } from "../components/icons";
 import { Avatar, Button, IconButton, Menu, Sheet, Spinner, useAsync } from "../components/ui";
 import { Ctx, useApp, type AppCtx } from "./context";
+import { SpaceSwitcher } from "./Spaces";
 
 const loaders = {
   mail: () => import("./Mail"), team: () => import("./Team"), work: () => import("./Work"),
@@ -39,8 +40,32 @@ function Loaded() {
   const [wsId, setWsId] = useState<string | null>(savedWs);
   const account = acct.data;
   const ws = account?.workspaces.find((w) => w.id === wsId) ?? account?.workspaces.find((w) => w.kind === "business") ?? account?.workspaces[0];
+  const personalWs = account?.workspaces.find((w) => w.kind === "personal");
+  /* Point mail at this space's mailbox before anything below asks for it */
+  if (ws) api.setMailScope(ws.id, ws.kind === "personal" || !personalWs);
   const people = useAsync<Person[]>(() => (ws ? api.people(ws.id) : Promise.resolve([])), [ws?.id]);
   const [unread, setUnread] = useState<{ team: number; mail?: number }>({ team: 0 });
+  /* Unread mail in every space, so the switcher can show what's waiting elsewhere */
+  const [inboxes, setInboxes] = useState<Record<string, number>>({});
+  const wsList = account?.workspaces;
+  useEffect(() => {
+    if (!wsList?.length) return;
+    const pers = wsList.find((w) => w.kind === "personal");
+    const load = () => api.unreadMail().then((rows) => {
+      const n: Record<string, number> = {};
+      for (const w of wsList) n[w.id] = 0;
+      for (const m of rows) {
+        if (m.snoozed_until && Date.parse(m.snoozed_until) > Date.now()) continue;
+        const owner = m.workspace_id ?? pers?.id ?? wsList.find((w) => w.kind === "business")?.id;
+        const space = wsList.find((w) => w.id === owner);
+        if (!space || (space.kind === "personal" && (m.category ?? "primary") !== "primary")) continue;
+        n[space.id] = (n[space.id] ?? 0) + 1;
+      }
+      setInboxes(n);
+    }, () => {});
+    load(); const t = setInterval(() => { if (document.visibilityState === "visible") load(); }, 30_000);
+    return () => clearInterval(t);
+  }, [wsList]);
 
   useEffect(() => { if (account && !account.workspaces.length) navigate("/signup?resume=1", { replace: true }); }, [account]);
   useEffect(() => { if (ws) document.title = `${ws.name} — Melo`; }, [ws]);
@@ -58,13 +83,14 @@ function Loaded() {
       account, ws, people: list, me: person(auth.get()?.user.id), person,
       nameOf: (id) => { const p = person(id); return p?.name || p?.email?.split("@")[0] || "Someone"; },
       isAdmin: ws.role === "owner" || ws.role === "admin", personal: ws.kind === "personal",
-      reloadAccount: acct.reload, reloadPeople: people.reload, switchWorkspace, unread, setUnread,
+      reloadAccount: acct.reload, reloadPeople: people.reload, switchWorkspace, unread, setUnread, inboxes,
     };
-  }, [account, ws, people.data, acct.reload, people.reload, switchWorkspace, unread]);
+  }, [account, ws, people.data, acct.reload, people.reload, switchWorkspace, unread, inboxes]);
 
   if (acct.error) return <Splash><p className="text-ink-2">{acct.error}</p><Button onClick={acct.reload}>Try again</Button></Splash>;
   if (!ctx) return <Splash />;
-  return <Ctx.Provider value={ctx}><Shell /></Ctx.Provider>;
+  /* A different space is a different app: remount so nothing from the last one lingers */
+  return <Ctx.Provider value={ctx}><Shell key={ctx.ws.id} /></Ctx.Provider>;
 }
 
 const TABS: { key: string; label: string; icon: IconName }[] = [
@@ -105,9 +131,8 @@ function Shell() {
 }
 
 function Rail({ section, unreadTeam, unreadMail }: { section: string; unreadTeam: number; unreadMail: number }) {
-  const { account, ws, switchWorkspace, personal } = useApp();
+  const { account, personal } = useApp();
   const name = account.profile?.full_name || account.email;
-  const others = account.workspaces.filter((w) => w.id !== ws.id);
   const tab = (key: string, label: string, icon: IconName, badge?: number) => (
     <Link key={key} to={`/app/${key}`} aria-current={section === key ? "page" : undefined}
       className={cx("relative flex h-[60px] w-[60px] flex-col items-center justify-center gap-1 rounded-xl text-xs text-ink-2 active:scale-95",
@@ -117,20 +142,12 @@ function Rail({ section, unreadTeam, unreadMail }: { section: string; unreadTeam
     </Link>
   );
   return (
-    <nav aria-label="Melo" className="hidden w-[76px] shrink-0 flex-col items-center gap-1 border-r border-line/60 py-4 md:flex">
-      <Menu align="left" trigger={(open) => (
-        <button type="button" onClick={open} title={ws.name} aria-label={`Workspace: ${ws.name}`} className="mb-4 flex size-[34px] items-center justify-center rounded-[10px] bg-inverse text-white transition hover:scale-105">
-          <MeloMark className="h-[11px] w-[17px]" />
-        </button>
-      )} items={[
-        ...others.map((w) => ({ label: w.kind === "personal" ? "Switch to Personal" : `Switch to ${w.name}`, icon: (w.kind === "personal" ? "user" : "grid") as IconName, onSelect: () => switchWorkspace(w.id) })),
-        { label: personal ? "Create a business workspace" : "New workspace", icon: "plus", onSelect: () => navigate("/signup?resume=1") },
-        { label: "Melo website", icon: "globe", onSelect: () => navigate("/") },
-      ]} />
+    <nav aria-label="Melo" className="relative z-30 hidden w-[76px] shrink-0 flex-col items-center gap-1 border-r border-line/60 py-4 md:flex">
+      <SpaceSwitcher />
       {TABS.filter((t) => !personal || t.key === "mail").map((t) => tab(t.key, t.label, t.icon, t.key === "team" ? unreadTeam : t.key === "mail" ? unreadMail : undefined))}
       <span className="flex-1" />
       {tab("settings", "Settings", "settings")}
-      <Menu align="left" trigger={(open) => (
+      <Menu align="left" up trigger={(open) => (
         <button type="button" onClick={open} aria-label="Your account" className="mt-2 rounded-full transition hover:scale-105"><Avatar name={name} size={30} soft /></button>
       )} items={[
         { label: "Profile", icon: "user", onSelect: () => navigate("/app/settings/profile") },

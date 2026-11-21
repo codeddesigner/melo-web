@@ -68,7 +68,7 @@ export default function Home() {
       <Header signedIn={signedIn} onDemo={() => setDemo(true)} />
       <main>
         <section className="hero">
-          <h1 className="hero-title">Relatable email for modern workforce.</h1>
+          <h1 className="hero-title">Relatable email for the modern workforce.</h1>
           <p className="hero-sub">Melo for Business brings your company email, chats, tasks and calendar together — with workspace rules that keep the noise out for everyone.</p>
           <div className="hero-ctas">
             {signedIn ? <Link className="btn btn-light btn-lg" to="/app">Visit workspace</Link> : <Link className="btn btn-light btn-lg" to="/signup">Get started — it’s free</Link>}

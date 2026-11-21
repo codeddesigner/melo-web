@@ -13,28 +13,6 @@
       "permanent": true
     },
     {
-      "source": "/personal",
-      "has": [
-        {
-          "type": "host",
-          "value": "business.melo.to"
-        }
-      ],
-      "destination": "https://melo.to/",
-      "permanent": false
-    },
-    {
-      "source": "/business",
-      "has": [
-        {
-          "type": "host",
-          "value": "melo.to"
-        }
-      ],
-      "destination": "https://business.melo.to/",
-      "permanent": false
-    },
-    {
       "source": "/:path*",
       "has": [
         {

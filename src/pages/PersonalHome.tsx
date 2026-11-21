@@ -20,12 +20,12 @@ export default function PersonalHome() {
   const start = signedIn ? "/app" : personalSignup();
   const startLabel = signedIn ? "Open Melo" : "Get Melo free";
   return (
-    <div className="melo-app bg-white text-ink animate-fade-in">
+    <div className="melo-app bg-white text-ink">
       <Nav signedIn={signedIn} start={start} startLabel={startLabel} soon={soon} />
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f3e48f_0%,#f7eebb_38%,#fbf8e6_68%,#ffffff_100%)] px-4 pt-14 pb-16 text-center md:pt-[72px]">
-          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance lg:text-wrap animate-fade-up max-w-[640px] sm:text-[60px] lg:text-[76px]">Relatable email for modern world.</h1>
+          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance lg:text-wrap animate-fade-up max-w-[640px] sm:text-[60px] lg:text-[76px]">Relatable email for the modern world.</h1>
           <p className="mx-auto mt-6 max-w-[680px] text-[17px] leading-[1.45] text-ink-sec animate-fade-up [animation-delay:60ms] md:text-[19px]">Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.</p>
           <div className="mx-auto mt-7 flex max-w-[360px] flex-col justify-center gap-3 animate-fade-up [animation-delay:120ms] sm:max-w-none sm:flex-row">
             <Link to={start} className={cx(BTN, "bg-inverse text-white hover:bg-[#333]")}>{startLabel}</Link>
@@ -164,7 +164,7 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
   return (
     <header className={cx("sticky top-0 z-40 transition-[background-color,box-shadow] duration-300", scrolled ? "bg-white/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur" : "bg-[#f3e48f]")}>
       <nav aria-label="Main" className="mx-auto flex h-14 max-w-[1440px] lg:h-[76px] items-center gap-3 px-5 md:gap-8 md:px-16">
-        <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={63} height={17} className="h-[17px] w-auto" /></Link>
+        <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/logo-mail.svg" alt="Melo Mail" width={101} height={22} className="h-[22px] w-auto" /></Link>
         <ul className="hidden items-center gap-0.5 lg:flex">
           {Object.entries(menus).map(([name, items]) => (
             <li key={name} className="relative" data-pmenu="">
@@ -274,7 +274,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
   return (
     <footer className="border-t border-line px-6 pt-16 pb-12 md:px-16">
       <div className="mx-auto flex max-w-[1312px] flex-col gap-10 md:flex-row md:gap-12">
-        <div className="flex flex-col gap-3.5"><img src="/wordmark.svg" alt="melo" width={59} height={16} className="h-4 w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
+        <div className="flex flex-col gap-3.5"><img src="/logo-mail.svg" alt="Melo Mail" width={96} height={21} className="h-[21px] w-auto self-start" /><p className="w-[260px] text-[13px] text-ink-sec">One calm inbox for your personal email.</p></div>
         <span className="hidden flex-1 md:block" />
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
           {col("Product", [["Primary", go("product")], ["Screener", go("product")], ["Later", go("product")], ["Summaries", go("product")], ["Melo for Business", businessHome()], ["Pricing", go("pricing")]])}

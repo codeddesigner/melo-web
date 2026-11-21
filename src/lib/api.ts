@@ -96,6 +96,7 @@ async function fn<T>(action: string, extra: Record<string, unknown> = {}, authed
 const q = encodeURIComponent;
 
 /* ---------- API ---------- */
+let mailScope = "";
 export const api = {
   /* sign-in and sign-up */
   sendCode: (email: string, mode?: "signin") => fn<{ ok: true; to: string }>("send", { email, mode }, false),
@@ -205,7 +206,12 @@ export const api = {
   deleteEvent: (id: string) => rest<null>("DELETE", `events?id=eq.${id}`),
 
   /* mail */
-  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}&select=id,folder,category,snoozed_until,from_addr,from_name,to_addrs,subject,body,read_at,created_at&order=created_at.desc&limit=200`),
+  /* Each space has its own mailbox. Mail to your @melo.to address (no workspace) lives in Personal;
+     a business workspace shows its own mail (and the @melo.to mail too when there is no Personal space). */
+  setMailScope(ws: string, includeUnfiled: boolean) { mailScope = includeUnfiled ? `&or=(workspace_id.is.null,workspace_id.eq.${ws})` : `&workspace_id=eq.${ws}`; },
+  mail: (folder: MailMessage["folder"]) => rest<MailMessage[]>("GET", `mail_messages?folder=eq.${folder}${mailScope}&select=id,workspace_id,folder,category,snoozed_until,from_addr,from_name,to_addrs,subject,body,read_at,created_at&order=created_at.desc&limit=200`),
+  /* Unread inbox mail across every space, for the account switcher */
+  unreadMail: () => rest<{ workspace_id: string | null; category: string | null; snoozed_until: string | null }[]>("GET", "mail_messages?folder=eq.inbox&read_at=is.null&select=workspace_id,category,snoozed_until&limit=2000"),
   mailHtml: async (id: string) => (await rest<{ html: string | null }[]>("GET", `mail_messages?id=eq.${id}&select=html`))[0]?.html ?? null,
   markRead: (id: string, read = true) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { read_at: read ? new Date().toISOString() : null }, "return=minimal"),
   moveMail: (id: string, folder: MailMessage["folder"]) => rest<null>("PATCH", `mail_messages?id=eq.${id}`, { folder }, "return=minimal"),
