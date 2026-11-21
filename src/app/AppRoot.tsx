@@ -40,7 +40,7 @@ function Loaded() {
   const account = acct.data;
   const ws = account?.workspaces.find((w) => w.id === wsId) ?? account?.workspaces.find((w) => w.kind === "business") ?? account?.workspaces[0];
   const people = useAsync<Person[]>(() => (ws ? api.people(ws.id) : Promise.resolve([])), [ws?.id]);
-  const [unread, setUnread] = useState({ team: 0 });
+  const [unread, setUnread] = useState<{ team: number; mail?: number }>({ team: 0 });
 
   useEffect(() => { if (account && !account.workspaces.length) navigate("/signup?resume=1", { replace: true }); }, [account]);
   useEffect(() => { if (ws) document.title = `${ws.name} — Melo`; }, [ws]);
@@ -79,6 +79,12 @@ function Shell() {
   const section = parts[1] ?? "";
   const ctx = useApp();
   useEffect(() => { if (ctx.personal && ["team", "work", "calendar"].includes(section)) navigate("/app/mail", { replace: true }); }, [ctx.personal, section]);
+  /* Unread mail for the rail badge (Mail keeps it exact while it's open) */
+  const { setUnread, personal } = ctx;
+  useEffect(() => {
+    const load = () => api.mail("inbox").then((rows) => setUnread((u) => ({ ...u, mail: rows.filter((m) => !m.read_at && !(m.snoozed_until && Date.parse(m.snoozed_until) > Date.now()) && (!personal || (m.category ?? "primary") === "primary")).length })), () => {});
+    load(); const t = setInterval(() => { if (document.visibilityState === "visible") load(); }, 60_000); return () => clearInterval(t);
+  }, [personal, setUnread]);
   /* Melo Personal swaps the blue accent for its yellow one everywhere, portals included */
   useEffect(() => { document.documentElement.classList.toggle("melo-personal", ctx.personal); return () => document.documentElement.classList.remove("melo-personal"); }, [ctx.personal]);
   useEffect(() => { if (!section) navigate("/app/mail", { replace: true }); }, [section]);
@@ -89,7 +95,7 @@ function Shell() {
   const view = section === "mail" ? <Mail /> : section === "team" ? <Team /> : section === "work" ? <Work /> : section === "calendar" ? <Calendar /> : section === "settings" ? <Settings /> : null;
   return (
     <div className="melo-app flex h-dvh flex-col overflow-hidden bg-app md:flex-row">
-      <Rail section={section} unreadTeam={ctx.unread.team} />
+      <Rail section={section} unreadTeam={ctx.unread.team} unreadMail={ctx.unread.mail ?? 0} />
       <main key={section} className="flex min-h-0 min-w-0 flex-1 flex-col animate-fade-in md:flex-row">
         <Suspense fallback={<div className="flex flex-1 items-center justify-center"><Spinner delay /></div>}>{view}</Suspense>
       </main>
@@ -98,7 +104,7 @@ function Shell() {
   );
 }
 
-function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) {
+function Rail({ section, unreadTeam, unreadMail }: { section: string; unreadTeam: number; unreadMail: number }) {
   const { account, ws, switchWorkspace, personal } = useApp();
   const name = account.profile?.full_name || account.email;
   const others = account.workspaces.filter((w) => w.id !== ws.id);
@@ -107,7 +113,7 @@ function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) 
       className={cx("relative flex h-[60px] w-[60px] flex-col items-center justify-center gap-1 rounded-xl text-xs text-ink-2 active:scale-95",
         section === key ? "bg-active font-semibold text-ink" : "hover:bg-hover")}>
       <Icon name={icon} className="size-[18px] text-icon" />{label}
-      {!!badge && <span key={badge} className="absolute left-[34px] top-[6px] animate-pop flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-app bg-accent px-1 text-[10px] font-bold leading-none text-white box-content">{badge > 99 ? "99+" : badge}</span>}
+      {!!badge && <span key={badge} className="absolute left-[34px] top-[6px] animate-pop flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-app bg-accent px-1 text-[10px] font-semibold leading-none text-[var(--color-accent-on,#fff)] box-content">{badge > 99 ? "99+" : badge}</span>}
     </Link>
   );
   return (
@@ -121,11 +127,11 @@ function Rail({ section, unreadTeam }: { section: string; unreadTeam: number }) 
         { label: personal ? "Create a business workspace" : "New workspace", icon: "plus", onSelect: () => navigate("/signup?resume=1") },
         { label: "Melo website", icon: "globe", onSelect: () => navigate("/") },
       ]} />
-      {TABS.filter((t) => !personal || t.key === "mail").map((t) => tab(t.key, t.label, t.icon, t.key === "team" ? unreadTeam : undefined))}
+      {TABS.filter((t) => !personal || t.key === "mail").map((t) => tab(t.key, t.label, t.icon, t.key === "team" ? unreadTeam : t.key === "mail" ? unreadMail : undefined))}
       <span className="flex-1" />
       {tab("settings", "Settings", "settings")}
       <Menu align="left" trigger={(open) => (
-        <button type="button" onClick={open} aria-label="Your account" className="mt-2 rounded-full transition hover:scale-105"><Avatar name={name} size={30} dark={!personal} soft={personal} /></button>
+        <button type="button" onClick={open} aria-label="Your account" className="mt-2 rounded-full transition hover:scale-105"><Avatar name={name} size={30} soft /></button>
       )} items={[
         { label: "Profile", icon: "user", onSelect: () => navigate("/app/settings/profile") },
         { label: "Sign out", icon: "out", onSelect: () => { auth.signOut(); navigate("/signin"); } },

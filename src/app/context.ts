@@ -1,3 +1,4 @@
+export type Unread = { team: number; mail?: number };
 import { createContext, useContext } from "react";
 import type { Account, Person, WorkspaceSummary } from "../lib/api";
 
@@ -13,8 +14,8 @@ export interface AppCtx {
   reloadAccount: () => void;
   reloadPeople: () => void;
   switchWorkspace: (id: string) => void;
-  unread: { team: number };
-  setUnread: (u: { team: number }) => void;
+  unread: Unread;
+  setUnread: (u: Unread | ((prev: Unread) => Unread)) => void;
 }
 export const Ctx = createContext<AppCtx | null>(null);
 export function useApp(): AppCtx {

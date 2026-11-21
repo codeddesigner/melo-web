@@ -62,6 +62,8 @@ export default function Mail() {
   const open = list.find((m) => m.id === openId);
   const loading = src.loading && !src.data;
   const unread = primary.filter((m) => !m.read_at).length;
+  const { setUnread } = useApp();
+  useEffect(() => { if (inbox.data) setUnread((u) => (u.mail === unread ? u : { ...u, mail: unread })); }, [unread, inbox.data, setUnread]);
   const patch = (id: string, p: Partial<MailMessage>) => inbox.set((d) => (d ?? []).map((m) => (m.id === id ? { ...m, ...p } : m)));
   /* Opening an unread message marks it read */
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function Mail() {
         </Link>}
       </SideNav>
       <Panel className="flex-row">
-        <div className={cx("flex min-w-0 flex-col", open ? (personal ? "hidden min-w-[360px] flex-1 border-r border-line lg:flex" : "hidden w-[420px] border-r border-line lg:flex") : "flex-1")}>
+        <div className={cx("flex min-w-0 flex-col", open ? "hidden min-w-[360px] flex-1 border-r border-line lg:flex" : "flex-1")}>
           <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
             <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
             {personal && folder === "inbox" && <div role="tablist" aria-label="Inbox view" className="flex rounded-full bg-subtle p-0.5 text-[13px] shadow-[inset_0_0_0_1px_var(--color-line)]">
@@ -171,10 +173,9 @@ function InboxState({ addr, provider, email, personal, onCompose }: { addr: stri
 
 const CAT_DOT: Record<string, string> = { newsletters: "#1e5a96", receipts: "#1f6b3a", updates: "#9a4b0f", screener: "#5b3fbf" };
 function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items: MailMessage[]; folder: Folder; openId?: string; nameFor: (e: string) => string; onDraft: (m: MailMessage) => void; showCat?: boolean }) {
-  const { personal } = useApp();
   let lastDay = "";
-  if (personal) return (
-    /* Melo Personal (Figma: Inbox): one line per message once there's room — dot · sender · tag + subject + preview · time */
+  return (
+    /* Figma Mail · Inbox: one line per message once there's room — dot · sender · tag + subject + preview · time */
     <div className="@container flex flex-col">
       {items.map((m) => {
         const day = folder === "later" ? `Back ${dayLabel(m.snoozed_until!).toLowerCase()}` : dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
@@ -186,13 +187,13 @@ function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items:
           <div key={m.id}>
             {header && <p className="px-4 pt-4 pb-1.5 text-[13px] text-ink-2">{header}</p>}
             <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/${folder}/${m.id}`))}
-              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[10px] px-4 py-2.5 text-left text-[13px] animate-fade-up active:scale-[.995] @xl:h-11 @xl:grid-cols-[8px_150px_minmax(0,1fr)_auto] @xl:py-0", sel ? "bg-pa-soft" : "hover:bg-hover")}>
-              {sel && <span className="absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-pa animate-fade-in" />}
-              <span className="hidden size-1.5 rounded-full @xl:block" style={{ background: unread ? "var(--color-pa)" : "transparent" }} aria-label={unread ? "Unread" : undefined} />
+              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[10px] px-4 py-2.5 text-left text-[13px] animate-fade-up active:scale-[.995] @xl:h-11 @xl:grid-cols-[8px_150px_minmax(0,1fr)_auto] @xl:py-0", sel ? "bg-accent-soft" : "hover:bg-hover")}>
+              {sel && <span className="absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-accent animate-fade-in" />}
+              <span className="hidden size-1.5 rounded-full @xl:block" style={{ background: unread ? "var(--color-accent)" : "transparent" }} aria-label={unread ? "Unread" : undefined} />
               <span className="@xl:hidden"><Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} /></span>
               <span className={cx("truncate text-ink @xl:block", unread ? "font-semibold" : "font-normal", "hidden")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span>
               <span className="min-w-0">
-                <span className={cx("flex items-center gap-2 truncate @xl:hidden", unread ? "font-semibold" : "")}>{unread && <span className="size-1.5 shrink-0 rounded-full bg-pa" />}<span className="truncate">{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
+                <span className={cx("flex items-center gap-2 truncate @xl:hidden", unread ? "font-semibold" : "")}>{unread && <span className="size-1.5 shrink-0 rounded-full bg-accent" />}<span className="truncate">{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
                 <span className="flex min-w-0 items-center gap-2">
                   {(showCat || (c !== "primary" && folder === "inbox")) && <span className="inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-full bg-subtle px-2 text-[12px] capitalize text-ink-2 shadow-[inset_0_0_0_1px_var(--color-line)]"><span className="size-1.5 rounded-full" style={{ background: CAT_DOT[c] ?? "#80868b" }} />{c === "receipts" ? "Receipt" : c}</span>}
                   <span className={cx("shrink-0 truncate text-ink", unread && "font-semibold")} style={{ maxWidth: "60%" }}>{m.subject || "(no subject)"}</span>
@@ -206,31 +207,15 @@ function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items:
       })}
     </div>
   );
-  return (
-    <div className="flex flex-col">
-      {items.map((m) => {
-        const day = folder === "later" ? `Back ${dayLabel(m.snoozed_until!).toLowerCase()}` : dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
-        const to = m.to_addrs.map(nameFor).join(", ") || "No recipients";
-        const inboxRow = INBOXISH.has(folder), unread = inboxRow && !m.read_at;
-        const who = inboxRow ? (m.from_name || m.from_addr) : `To ${to}`;
-        return (
-          <div key={m.id}>
-            {header && <p className="px-3 pt-4 pb-1 text-xs text-ink-3">{header}</p>}
-            <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/${folder}/${m.id}`))}
-              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left animate-fade-up active:scale-[.99]", openId === m.id ? "bg-accent-soft" : "hover:bg-hover")}>
-              {openId === m.id && <span className="absolute left-0 top-3 h-6 w-0.5 rounded bg-accent animate-fade-in" />}
-              <Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} />
-              <span className="min-w-0">
-                <span className="flex items-center gap-2">{unread && <span className="size-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />}<span className={cx("truncate", unread ? "font-semibold" : "font-medium")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
-                <span className="block truncate text-sm">{showCat && <span className="mr-1.5 inline-flex rounded-full bg-subtle px-1.5 text-[11px] capitalize text-ink-2 shadow-[inset_0_0_0_1px_var(--color-line)]">{cat(m)}</span>}<span className={cx("text-ink", unread && "font-medium")}>{m.subject || "(no subject)"}</span> <span className="text-ink-3">{m.body.slice(0, 120)}</span></span>
-              </span>
-              <span className="text-xs text-ink-3">{folder === "later" ? <span className="inline-flex items-center gap-1 text-pa-text"><Icon name="clock" className="size-3" />{fmtTime(m.snoozed_until!)}</span> : fmtShort(m.created_at)}</span>
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
+}
+
+function ReplyKey({ onReply }: { onReply?: () => void }) {
+  useEffect(() => {
+    if (!onReply) return;
+    const k = (e: KeyboardEvent) => { if ((e.key === "r" || e.key === "R") && !e.metaKey && !e.ctrlKey && !e.altKey && !document.querySelector("[aria-modal='true']") && !(e.target as HTMLElement).closest("input,textarea,select,[contenteditable]")) { e.preventDefault(); onReply(); } };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [onReply]);
+  return null;
 }
 
 function SortedCard({ count }: { count: number }) {
@@ -269,7 +254,8 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, o
   const incoming = m.folder === "inbox" || m.folder === "archive";
   const fromName = incoming ? (m.from_name || m.from_addr) : (account.profile?.full_name || m.from_addr);
   return (
-    <article className={cx("flex min-w-0 flex-1 flex-col animate-fade-up", personal && "lg:w-[440px] lg:flex-none xl:w-[480px]")}>
+    <article className={"flex min-w-0 flex-1 flex-col animate-fade-up lg:w-[440px] lg:flex-none xl:w-[480px]"}>
+      <ReplyKey onReply={onReply} />
       <header className="flex h-16 shrink-0 items-center gap-1 border-b border-line px-5">
         <IconButton icon="chev-left" label={`Back to ${incoming ? "Inbox" : "Sent"}`} onClick={onClose} />
         {onArchive && <IconButton icon="archive" label="Archive" onClick={onArchive} />}
@@ -296,6 +282,9 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, o
         {incoming ? <MailBody m={m} /> : <div className="mt-6 whitespace-pre-wrap break-words text-[15px] leading-[24px]">{m.body}</div>}
         {!incoming && <div className="mt-8"><Tag tone="ok" icon="check">Sent from Melo</Tag></div>}
       </div>
+      {/* Figma: quick reply bar at the foot of the reader (press R) */}
+      {onReply && <div className="shrink-0 p-4 pt-2"><button type="button" onClick={onReply} className="flex h-11 w-full items-center rounded-2xl border border-line-2 bg-white px-4 text-left text-[13px] text-ink-3 hover:border-ink-4 hover:shadow-[0_1px_2px_rgba(0,0,0,.05)]">
+        <span className="flex-1 truncate">Reply to {(m.from_name || m.from_addr).split(/\s+/)[0]}…</span><kbd className="rounded-md border border-line px-1.5 text-[11px] text-ink-3">R</kbd></button></div>}
     </article>
   );
 }

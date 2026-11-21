@@ -50,7 +50,7 @@ export default function Team() {
   const seen = loadSeen();
   const isUnread = (c: Channel) => { const l = latest[c.id]; return Boolean(l && l.by !== me && c.id !== active?.id && (!seen[c.id] || seen[c.id] < l.at)); };
   const unreadCount = (ch.data ?? []).filter(isUnread).length;
-  useEffect(() => { setUnread({ team: unreadCount }); }, [unreadCount, setUnread]);
+  useEffect(() => { setUnread((u) => (u.team === unreadCount ? u : { ...u, team: unreadCount })); }, [unreadCount, setUnread]);
 
   const dmName = (c: Channel) => { const other = c.dm_users?.find((u) => u !== me) ?? me; return other === me ? `${nameOf(me)} (you)` : nameOf(other); };
   const openDm = async (user: string) => {

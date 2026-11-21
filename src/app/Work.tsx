@@ -13,7 +13,7 @@ const STATUS: { key: TaskStatus; label: string; dot: string }[] = [
   { key: "done", label: "Done", dot: "#2ea44f" },
 ];
 const PRIO: Record<Priority, { label: string; color: string }> = {
-  urgent: { label: "Urgent", color: "#e5484d" }, high: { label: "High", color: "#f0a01e" }, normal: { label: "Normal", color: "#1b87f5" }, low: { label: "Low", color: "#80868b" },
+  urgent: { label: "Urgent", color: "#e5484d" }, high: { label: "High", color: "#f7b500" }, normal: { label: "Normal", color: "#4a90e2" }, low: { label: "Low", color: "#a0a6ae" },
 };
 type View = "mine" | "by-me" | "week" | "all" | "done";
 
@@ -98,7 +98,7 @@ function TaskMeta({ t, nameOf }: { t: Task; nameOf: (id: string) => string }) {
     <span className="hidden flex-wrap gap-1 lg:flex">{t.tags.map((g) => <Tag key={g} dot={colorFor(g)}>{g}</Tag>)}</span>
     <span className="hidden items-center gap-1.5 text-sm md:flex">{t.assignee ? <><Avatar name={nameOf(t.assignee)} id={t.assignee} size={22} />{nameOf(t.assignee).split(" ")[0]}</> : <span className="text-ink-3">—</span>}</span>
     <span className={cx("text-sm", due.tone === "bad" && t.status !== "done" ? "text-bad" : due.tone === "warn" && t.status !== "done" ? "text-warn" : "text-ink-2")}>{due.text || <span className="text-ink-3">—</span>}</span>
-    <span className="hidden items-center gap-1.5 text-sm lg:flex"><Icon name="flag" className="size-3.5" label={PRIO[t.priority].label} />{PRIO[t.priority].label}</span>
+    <span className="hidden items-center gap-1.5 text-sm lg:flex"><span style={{ color: PRIO[t.priority].color }} className="flex"><Icon name="flag" className="size-3.5" label={PRIO[t.priority].label} /></span>{PRIO[t.priority].label}</span>
   </>;
 }
 function ListView({ tasks, nameOf, onOpen, onToggle }: { tasks: Task[]; nameOf: (id: string) => string; onOpen: (t: Task) => void; onToggle: (t: Task) => void }) {
