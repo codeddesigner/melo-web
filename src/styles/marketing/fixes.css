@@ -1,4 +1,4 @@
-:root { --text-secondary: #4f4f4f; --text-tertiary: #6b6b6b; }
+:root { --text-secondary: #5f6368; --text-tertiary: #80868b; }
 .logo-img { display: block; width: 150px; height: auto; }
 .mm-head .logo-img { width: 140px; }
 .site-header .logo-img { transition: filter .2s; }
@@ -37,3 +37,11 @@
 /* Personal ⇄ Business toggle: white text over the blue hero, dark once the header turns white */
 .site-header:not(.scrolled) .site-toggle a:not([aria-current]) { color: #fff !important; }
 .site-header:not(.scrolled) .site-toggle { background: rgba(255,255,255,.18) !important; }
+
+/* Avatars (Figma avatar/*): soft fill with a matching ink, whatever element carries them */
+[style*="--avatar-orange"] { color: #8a4100 !important; }
+[style*="--avatar-purple"] { color: #5b3fbf !important; }
+[style*="--avatar-teal"] { color: #00605c !important; }
+[style*="--avatar-blue"] { color: #0b57d0 !important; }
+[style*="--avatar-pink"] { color: #9c2459 !important; }
+[style*="--avatar-black"] { color: #444746 !important; }

@@ -10,10 +10,10 @@ import { Panel, SideItem, SideLabel, SideNav, SideSearch } from "./AppRoot";
 
 type Folder = "inbox" | "later" | "newsletters" | "receipts" | "screener" | "updates" | "sent" | "drafts";
 const SORTED: { key: MailCategory; label: string; dot: string; blurb: string }[] = [
-  { key: "newsletters", label: "Newsletters", dot: "#1b87f5", blurb: "Newsletters and digests wait here, out of Primary." },
-  { key: "receipts", label: "Receipts", dot: "#2ea44f", blurb: "Orders, invoices and shipping updates, all in one place." },
+  { key: "newsletters", label: "Newsletters", dot: "#1e5a96", blurb: "Newsletters and digests wait here, out of Primary." },
+  { key: "receipts", label: "Receipts", dot: "#1f6b3a", blurb: "Orders, invoices and shipping updates, all in one place." },
   { key: "screener", label: "Screener", dot: "#5b3fbf", blurb: "First-time senders wait here until you say yes." },
-  { key: "updates", label: "Updates", dot: "#c77700", blurb: "Sign-in alerts, codes and account notices." },
+  { key: "updates", label: "Updates", dot: "#9a4b0f", blurb: "Sign-in alerts, codes and account notices." },
 ];
 const INBOXISH = new Set<Folder>(["inbox", "later", "newsletters", "receipts", "screener", "updates"]);
 const snoozed = (m: MailMessage) => Boolean(m.snoozed_until && Date.parse(m.snoozed_until) > Date.now());
@@ -116,7 +116,7 @@ export default function Mail() {
         </Link>}
       </SideNav>
       <Panel className="flex-row">
-        <div className={cx("flex min-w-0 flex-col", open ? "hidden w-[420px] border-r border-line lg:flex" : "flex-1")}>
+        <div className={cx("flex min-w-0 flex-col", open ? (personal ? "hidden min-w-[360px] flex-1 border-r border-line lg:flex" : "hidden w-[420px] border-r border-line lg:flex") : "flex-1")}>
           <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
             <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
             {personal && folder === "inbox" && <div role="tablist" aria-label="Inbox view" className="flex rounded-full bg-subtle p-0.5 text-[13px] shadow-[inset_0_0_0_1px_var(--color-line)]">
@@ -154,7 +154,7 @@ function InboxState({ addr, provider, email, personal, onCompose }: { addr: stri
   const external = provider && provider !== "melo" ? PROVIDER[provider] : null;
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center animate-fade-up">
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent"><Icon name="inbox" className="size-6" /></span>
+      <span className="flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent-ink"><Icon name="inbox" className="size-6" /></span>
       <h3 className="mt-4 text-[19px] font-medium">{addr ? "You’re all caught up" : "Get your Melo inbox"}</h3>
       <p className="mt-2 max-w-md text-sm text-ink-2">
         {addr ? <>Mail sent to <b className="font-medium">{addr}</b> arrives here.</>
@@ -169,8 +169,43 @@ function InboxState({ addr, provider, email, personal, onCompose }: { addr: stri
   );
 }
 
+const CAT_DOT: Record<string, string> = { newsletters: "#1e5a96", receipts: "#1f6b3a", updates: "#9a4b0f", screener: "#5b3fbf" };
 function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items: MailMessage[]; folder: Folder; openId?: string; nameFor: (e: string) => string; onDraft: (m: MailMessage) => void; showCat?: boolean }) {
+  const { personal } = useApp();
   let lastDay = "";
+  if (personal) return (
+    /* Melo Personal (Figma: Inbox): one line per message once there's room — dot · sender · tag + subject + preview · time */
+    <div className="@container flex flex-col">
+      {items.map((m) => {
+        const day = folder === "later" ? `Back ${dayLabel(m.snoozed_until!).toLowerCase()}` : dayLabel(m.created_at), header = day !== lastDay ? day : ""; lastDay = day;
+        const to = m.to_addrs.map(nameFor).join(", ") || "No recipients";
+        const inboxRow = INBOXISH.has(folder), unread = inboxRow && !m.read_at, sel = openId === m.id;
+        const who = inboxRow ? (m.from_name || m.from_addr) : `To ${to}`;
+        const c = cat(m);
+        return (
+          <div key={m.id}>
+            {header && <p className="px-4 pt-4 pb-1.5 text-[13px] text-ink-2">{header}</p>}
+            <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/${folder}/${m.id}`))}
+              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[10px] px-4 py-2.5 text-left text-[13px] animate-fade-up active:scale-[.995] @xl:h-11 @xl:grid-cols-[8px_150px_minmax(0,1fr)_auto] @xl:py-0", sel ? "bg-pa-soft" : "hover:bg-hover")}>
+              {sel && <span className="absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-pa animate-fade-in" />}
+              <span className="hidden size-1.5 rounded-full @xl:block" style={{ background: unread ? "var(--color-pa)" : "transparent" }} aria-label={unread ? "Unread" : undefined} />
+              <span className="@xl:hidden"><Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} /></span>
+              <span className={cx("truncate text-ink @xl:block", unread ? "font-semibold" : "font-normal", "hidden")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span>
+              <span className="min-w-0">
+                <span className={cx("flex items-center gap-2 truncate @xl:hidden", unread ? "font-semibold" : "")}>{unread && <span className="size-1.5 shrink-0 rounded-full bg-pa" />}<span className="truncate">{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
+                <span className="flex min-w-0 items-center gap-2">
+                  {(showCat || (c !== "primary" && folder === "inbox")) && <span className="inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-full bg-subtle px-2 text-[12px] capitalize text-ink-2 shadow-[inset_0_0_0_1px_var(--color-line)]"><span className="size-1.5 rounded-full" style={{ background: CAT_DOT[c] ?? "#80868b" }} />{c === "receipts" ? "Receipt" : c}</span>}
+                  <span className={cx("shrink-0 truncate text-ink", unread && "font-semibold")} style={{ maxWidth: "60%" }}>{m.subject || "(no subject)"}</span>
+                  <span className="min-w-0 truncate text-ink-3">{m.body.replace(/\s+/g, " ").slice(0, 140)}</span>
+                </span>
+              </span>
+              <span className={cx("text-[12px]", unread ? "font-medium text-ink" : "text-ink-3")}>{folder === "later" ? <span className="inline-flex items-center gap-1 text-pa-text"><Icon name="clock" className="size-3" />{fmtTime(m.snoozed_until!)}</span> : fmtShort(m.created_at)}</span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
   return (
     <div className="flex flex-col">
       {items.map((m) => {
@@ -234,7 +269,7 @@ function Reader({ m, nameFor, onClose, onForward, onReply, onArchive, onTrash, o
   const incoming = m.folder === "inbox" || m.folder === "archive";
   const fromName = incoming ? (m.from_name || m.from_addr) : (account.profile?.full_name || m.from_addr);
   return (
-    <article className="flex min-w-0 flex-1 flex-col animate-fade-up">
+    <article className={cx("flex min-w-0 flex-1 flex-col animate-fade-up", personal && "lg:w-[440px] lg:flex-none xl:w-[480px]")}>
       <header className="flex h-16 shrink-0 items-center gap-1 border-b border-line px-5">
         <IconButton icon="chev-left" label={`Back to ${incoming ? "Inbox" : "Sent"}`} onClick={onClose} />
         {onArchive && <IconButton icon="archive" label="Archive" onClick={onArchive} />}
@@ -273,7 +308,7 @@ function MailBody({ m }: { m: MailMessage }) {
   useEffect(() => { let live = true; setHtml(undefined); setImages(false); api.mailHtml(m.id).then((h) => live && setHtml(h), () => live && setHtml(null)); return () => { live = false; }; }, [m.id]);
   const remote = Boolean(html && /<img[^>]+src=["']?https?:/i.test(html));
   const csp = `default-src 'none'; style-src 'unsafe-inline'; font-src data:; img-src data: cid:${images ? " https: http:" : ""}`;
-  const doc = html ? `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>body{margin:0;font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#202020;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}</style></head><body>${html}</body></html>` : "";
+  const doc = html ? `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}"><base target="_blank"><style>body{margin:0;font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f1f1f;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}</style></head><body>${html}</body></html>` : "";
   const fit = () => { const el = frame.current; const d = el?.contentDocument; if (el && d?.body) el.style.height = `${Math.max(120, d.documentElement.scrollHeight)}px`; };
   if (html === undefined) return <div className="mt-6 flex flex-col gap-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>;
   if (!html) return <div className="mt-6 whitespace-pre-wrap break-words text-[15px] leading-[24px] animate-fade-in">{m.body}</div>;

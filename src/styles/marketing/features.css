@@ -6,7 +6,7 @@
 .feat-item { display: block; width: 100%; text-align: left; padding: 22px 0; border-top: 1px solid var(--border-strong); cursor: pointer; }
 .feat-item:first-child { border-top: 0; padding-top: 0; }
 .feat-name { display: block; font-family: var(--font-display); font-weight: 600; font-size: 40px; line-height: 1.1; letter-spacing: -0.01em; color: #9e9e9e; transition: color .2s; }
-.feat-item:hover .feat-name { color: #6b6b6b; }
+.feat-item:hover .feat-name { color: #80868b; }
 .feat-item.active .feat-name { color: var(--text-primary); }
 .feat-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
 .feat-body > span { overflow: hidden; }
@@ -66,11 +66,11 @@
 .sf-logo .logo-img { width: 140px; }
 .sf-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
 .sf-col { display: flex; flex-direction: column; gap: 14px; }
-.sf-col h5 { margin: 0 0 10px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; color: #8a8a8a; }
+.sf-col h5 { margin: 0 0 10px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; color: #80868b; }
 .sf-col a { font-size: 17px; line-height: 24px; color: var(--text-primary); width: fit-content; }
 .sf-col a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .sf-bottom { margin-top: 112px; align-items: center; }
-.sf-copy { font-size: 14px; color: #6b6b6b; }
+.sf-copy { font-size: 14px; color: #80868b; }
 .sf-pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border: 1px solid #dcdcdc; border-radius: 999px; font-size: 14px; color: var(--text-primary); }
 .sf-pill .icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.3; }
 @media (max-width: 1180px) {
@@ -111,12 +111,12 @@
 .cw li i { width: 14px; height: 14px; border: 1px solid #232323; background: transparent; }
 .cw li.on i { background: #232323; }
 .cw li.part i { background: linear-gradient(135deg, #232323 50%, transparent 50%); }
-.cw li em { font-style: normal; color: #6b6b6b; }
+.cw li em { font-style: normal; color: #80868b; }
 .cw li.on em { color: #1a7f4b; font-weight: 700; }
 .cw-other li span { color: #5c5c5c; }
 .cw-other li:not(.part) span { text-decoration: line-through; text-decoration-color: rgba(35,35,35,.35); }
 .cw-melo .cw-body::after { content: "1 app · Ready"; display: inline-block; margin-top: 24px; background: #1f1f1f; color: #fff; padding: 2px 6px; }
-.cw-other .cw-body::after { content: "4 apps · Still switching"; display: inline-block; margin-top: 24px; background: #8a8a8a; color: #fff; padding: 2px 6px; }
+.cw-other .cw-body::after { content: "4 apps · Still switching"; display: inline-block; margin-top: 24px; background: #80868b; color: #fff; padding: 2px 6px; }
 .cmpx-stats { display: flex; gap: 40px; align-items: flex-start; padding: 28px 0 0 1px; border-left: 1px solid #232323; padding-left: 12px; }
 .cmpx-stats div { display: flex; flex-direction: column; gap: 2px; font-size: 17px; line-height: 24px; }
 .cmpx-stats b { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin-bottom: 10px; }
@@ -156,7 +156,7 @@
   background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231a1a1a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 6.25 3.5 3.5 3.5-3.5'/%3E%3C/svg%3E") no-repeat right 14px center/16px; }
 .vf select:invalid { color: #9e9e9e; }
 .vf input:focus, .vf select:focus { border-color: var(--accent-base); box-shadow: 0 0 0 3px var(--accent-soft); }
-.vf.bad input, .vf.bad select { border-color: #d93025; }
+.vf.bad input, .vf.bad select { border-color: #e5484d; }
 .vs-foot { margin-top: 28px; display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
 .vs-err { margin-right: auto; font-size: 13px; color: #c62828; }
 .vs-done { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 24px 0; }

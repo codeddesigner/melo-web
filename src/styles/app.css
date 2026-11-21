@@ -7,38 +7,41 @@
 @font-face { font-family: "Calamantus"; src: url("/fonts/Calamantus-Medium.woff") format("woff"); font-weight: 500; font-display: swap; }
 @font-face { font-family: "Calamantus"; src: url("/fonts/Calamantus-SemiBold.woff") format("woff"); font-weight: 600 900; font-display: swap; }
 
-@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-Medium.woff") format("woff"); font-weight: 400 500; font-display: swap; }
-@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-SemiBold.woff") format("woff"); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-Regular.woff") format("woff"); font-weight: 300 400; font-display: swap; }
+@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-Medium.woff") format("woff"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-SemiBold.woff") format("woff"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "SoapOpera"; src: url("/fonts/SoapOpera-Bold.woff") format("woff"); font-weight: 700 900; font-display: swap; }
 
 /* Melo design tokens (Figma variables) */
 @theme {
-  --font-sans: "Calamantus", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "SoapOpera", "Calamantus", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "SoapOpera", "Calamantus", system-ui, sans-serif;
   /* Melo Personal accent (Figma: personal/accent/*) */
   --color-pa: #f1e289;
   --color-pa-soft: #fbf6dc;
   --color-pa-text: #7a6a0e;
   --color-pa-on: #2b2600;
-  --color-ink-sec: #5f5f5f;
+  --color-pa-focus: #e2cf5e;
+  --color-ink-sec: #5f6368;
   --color-tag-blue-bg: #dceeff;
   --color-tag-green-bg: #ddf3e4;
   --color-tag-purple-bg: #eae4ff;
   --color-tag-orange-bg: #fde8d4;
   --color-tag-pink-bg: #fce2ef;
-  --color-ink: #202020;
-  --color-ink-2: #4f4f4f;
-  --color-ink-3: #6b6b6b;
-  --color-ink-4: #b5b5b5;
-  --color-icon: #3a3a3a;
-  --color-icon-2: #8a8a8a;
-  --color-app: #f7f7f7;
+  --color-ink: #1f1f1f;
+  --color-ink-2: #5f6368;
+  --color-ink-3: #80868b;
+  --color-ink-4: #bdc1c6;
+  --color-icon: #444746;
+  --color-icon-2: #80868b;
+  --color-app: #f7f8fa;
   --color-surface: #ffffff;
-  --color-subtle: #fafafa;
-  --color-hover: #f0f0f0;
-  --color-active: #ebebeb;
-  --color-inverse: #1a1a1a;
-  --color-line: #eeeeee;
-  --color-line-2: #e0e0e0;
+  --color-subtle: #f8f9fb;
+  --color-hover: #f1f3f6;
+  --color-active: #eaf0fa;
+  --color-inverse: #1f1f1f;
+  --color-line: #eff1f4;
+  --color-line-2: #e3e6ea;
   --color-accent: #1b87f5;
   --color-accent-ink: #0d6bd0;
   --color-accent-soft: #e8f2fe;
@@ -46,7 +49,7 @@
   --color-ok-soft: #e3f6e8;
   --color-warn: #c77700;
   --color-warn-soft: #fff4e0;
-  --color-bad: #d93025;
+  --color-bad: #e5484d;
   --color-bad-soft: #fdecea;
   --color-tag-blue: #1e5a96;
   --color-tag-green: #1f6b3a;
@@ -80,6 +83,12 @@
   @keyframes rise-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(24px); } }
   @keyframes tick { 0% { transform: scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
 }
+
+/* Melo Personal accent (Figma personal/accent/*) */
+:root.melo-personal {
+  --color-accent: #f1e289; --color-accent-ink: #7a6a0e; --color-accent-soft: #fbf6dc; --color-accent-on: #2b2600;
+}
+:root.melo-personal .melo-app :focus-visible { outline-color: #e2cf5e; }
 
 /* Base for the app (scoped so it never touches the marketing pages) */
 @layer base {

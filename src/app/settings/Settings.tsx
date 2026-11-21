@@ -81,8 +81,8 @@ function ProfilePage() {
       <Body>
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <Avatar name={f.full_name || account.email} size={64} dark />
-            <div><p className="text-[18px] font-medium">{f.full_name || account.email}</p><p className="text-sm text-ink-3 capitalize">{ws.kind === "personal" ? "Personal account" : `${ws.role} · ${ws.name}`}</p></div>
+            <Avatar name={f.full_name || account.email} size={64} soft />
+            <div><p className="text-[17px] font-medium">{f.full_name || account.email}</p><p className={cx("text-[13px] text-ink-2", ws.kind !== "personal" && "capitalize")}>{ws.kind === "personal" ? `${account.profile?.melo_address ? `${account.profile.melo_address}@melo.to` : account.email} · Melo Free` : `${ws.role} · ${ws.name}`}</p></div>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <Field label="Full name"><Input value={f.full_name} onChange={(v) => setF({ ...f, full_name: v })} autoComplete="name" /></Field>
@@ -93,12 +93,12 @@ function ProfilePage() {
         <div className="grid gap-6 md:grid-cols-2">
           <SecurityCard />
           <Card className="p-5">
-            <h3 className="mb-3 font-medium">Melo address</h3>
+            <h3 className="mb-3 text-[15px] font-medium">Melo address</h3>
             <MeloAddress />
           </Card>
         </div>
         <Card className="flex items-center justify-between p-5">
-          <div><h3 className="font-medium">Sign out</h3><p className="text-sm text-ink-3">Sign out of Melo on this browser.</p></div>
+          <div><h3 className="text-[15px] font-medium">Sign out</h3><p className="text-sm text-ink-3">Sign out of Melo on this browser.</p></div>
           <Button variant="line" icon="out" onClick={() => { auth.signOut(); navigate("/signin"); }}>Sign out</Button>
         </Card>
       </Body>
@@ -120,7 +120,7 @@ function SecurityCard() {
   const d = info.data;
   return (
     <Card className="p-5">
-      <h3 className="mb-3 font-medium">Sign-in & security</h3>
+      <h3 className="mb-3 text-[15px] font-medium">Sign-in & security</h3>
       {!d ? <div className="flex flex-col gap-2"><Skeleton className="h-6" /><Skeleton className="h-6" /></div> : d.password_account ? <>
         <Row icon="mail" label="Sign in with" value={account.email} />
         <Row icon="lock" label="Password" value={<button type="button" className="text-accent-ink hover:underline" onClick={() => setMode(mode === "password" ? "" : "password")}>Change</button>} />

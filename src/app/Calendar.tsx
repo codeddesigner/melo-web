@@ -11,7 +11,7 @@ const COLORS: Record<string, { bg: string; bar: string; label: string }> = {
   green: { bg: "#dff3e7", bar: "#14a37f", label: "Client meetings" },
   orange: { bg: "#fde6d2", bar: "#f07b1e", label: "Personal" },
   pink: { bg: "#fbe0ec", bar: "#e2468b", label: "Out of office" },
-  gray: { bg: "#ececec", bar: "#6b6b6b", label: "Focus" },
+  gray: { bg: "#ececec", bar: "#80868b", label: "Focus" },
 };
 const HOUR = 64, START = 7, END = 21;
 
@@ -70,7 +70,7 @@ export default function Calendar() {
           {days.map((d) => (
             <div key={d.toISOString()} className="flex items-center gap-2 border-l border-line px-2.5 py-2.5 text-sm">
               <span className="text-ink-3">{d.toLocaleDateString("en-US", { weekday: "short" })}</span>
-              <span className={cx("flex size-7 items-center justify-center rounded-full font-medium", sameDay(d, now) && "bg-accent text-white")}>{d.getDate()}</span>
+              <span className={cx("flex size-7 items-center justify-center rounded-full font-medium", sameDay(d, now) && "bg-accent text-[var(--color-accent-on,#fff)]")}>{d.getDate()}</span>
             </div>
           ))}
         </div>
@@ -159,7 +159,9 @@ function EventModal({ start, onClose, onSaved }: { start: Date; onClose: () => v
   const save = async () => {
     if (!f.title.trim()) return toast("Give the event a title.", "bad");
     const s = new Date(`${f.date}T${f.from}`), e = new Date(`${f.date}T${f.to}`);
-    if (!(e > s)) return toast("The end time needs to be after the start.", "bad");
+    /* An end at or before the start runs past midnight (11 PM – 12 AM) */
+    if (e <= s) e.setDate(e.getDate() + 1);
+    if (e.getTime() - s.getTime() > 24 * 3_600_000 || e.getTime() === s.getTime()) return toast("The end time needs to be after the start.", "bad");
     setBusy(true);
     try { onSaved(await api.createEvent({ workspace_id: ws.id, title: f.title.trim(), starts_at: s.toISOString(), ends_at: e.toISOString(), color: f.color, location: f.location.trim() || null })); }
     catch (err) { toast((err as Error).message, "bad"); } finally { setBusy(false); }

@@ -22,9 +22,10 @@ export function Scaled({ w = 1440, h = 900, children, className }: { w?: number;
   );
 }
 
-const AV: Record<string, string> = { MM: "#f07b1e", SM: "#14a3a3", DW: "#e2468b", SL: "#1b87f5", HL: "#6a4ff0", LG: "#2ea44f", MR: "#f07b1e", AM: "#1f1f1f" };
+/* Figma avatar/* pairs: soft fill + matching ink */
+const AV: Record<string, [string, string]> = { MM: ["#ffe0cc", "#8a4100"], SM: ["#c8ece9", "#00605c"], DW: ["#fddbe7", "#9c2459"], SL: ["#d3e3fd", "#0b57d0"], HL: ["#e8def8", "#5b3fbf"], LG: ["#c9eed3", "#146c2e"], MR: ["#ffe0cc", "#8a4100"], AM: ["#e8eaed", "#444746"] };
 const Av = ({ i, s = 32, sq }: { i: string; s?: number; sq?: boolean }) =>
-  <span className={cx("flex shrink-0 items-center justify-center font-semibold text-white", sq ? "rounded-lg bg-hover text-ink-3" : "rounded-full")} style={{ width: s, height: s, fontSize: s * 0.36, background: sq ? undefined : AV[i] ?? "#8a8a8a" }}>{i}</span>;
+  <span className={cx("flex shrink-0 items-center justify-center font-medium", sq ? "rounded-lg bg-hover text-ink-3" : "rounded-full")} style={{ width: s, height: s, fontSize: s * 0.36, background: sq ? undefined : (AV[i] ?? ["#e8eaed", "#444746"])[0], color: sq ? undefined : (AV[i] ?? ["#e8eaed", "#444746"])[1] }}>{i}</span>;
 const Tag = ({ c, t }: { c: string; t: string }) => <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full bg-hover px-2 text-[12px] text-ink-2"><span className="size-1.5 rounded-full" style={{ background: c }} />{t}</span>;
 
 function Sidebar({ active }: { active: string }) {
@@ -171,7 +172,7 @@ export function PersonalMock({ view = "inbox" }: { view?: MockView }) {
 /* Small window chrome around a mock, as in the Figma hero */
 export function MockWindow({ view, className }: { view?: MockView; className?: string }) {
   return (
-    <div className={cx("overflow-hidden rounded-[20px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,.06),0_40px_80px_-30px_rgba(60,50,0,.35)]", className)}>
+    <div className={cx("overflow-hidden rounded-[20px] bg-white text-left shadow-[0_0_0_1px_rgba(0,0,0,.06),0_40px_80px_-30px_rgba(60,50,0,.35)]", className)}>
       <div className="flex h-9 items-center gap-1.5 border-b border-line bg-subtle px-4"><i className="size-2.5 rounded-full bg-[#ff5f57]" /><i className="size-2.5 rounded-full bg-[#febc2e]" /><i className="size-2.5 rounded-full bg-[#28c840]" /></div>
       <Scaled><PersonalMock view={view} /></Scaled>
     </div>

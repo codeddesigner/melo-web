@@ -20,10 +20,10 @@ function Menus({ close }: { close: () => void }): Record<string, { width: number
       width: 1018,
       body: <>
         <div className="mega-col" style={{ width: 300 }}><div className="mega-label">Apps</div>
-          {F("/product", ["mail", "var(--tag-blue-bg)", "var(--avatar-blue)", "Mail", "Split inbox, AI summaries, shared addresses."], close)}
-          {F("/product", ["users", "var(--tag-pink-bg)", "var(--avatar-pink)", "Team", "Channels, DMs, threads and huddles."], close)}
+          {F("/product", ["mail", "var(--tag-blue-bg)", "var(--tag-blue-fg)", "Mail", "Split inbox, AI summaries, shared addresses."], close)}
+          {F("/product", ["users", "var(--tag-pink-bg)", "var(--tag-pink-fg)", "Team", "Channels, DMs, threads and huddles."], close)}
           {F("/product", ["task", "var(--tag-green-bg)", "var(--feedback-success)", "Work", "Tasks, projects and tags — from mail or chat."], close)}
-          {F("/booking", ["calendar", "var(--tag-orange-bg)", "var(--avatar-orange)", "Calendar", "Your week plus booking links."], close)}</div>
+          {F("/booking", ["calendar", "var(--tag-orange-bg)", "var(--tag-orange-fg)", "Calendar", "Your week plus booking links."], close)}</div>
         <div className="mega-col" style={{ width: 280 }}><div className="mega-label">Features</div>
           {F("/rules", ["shield", "var(--tag-purple-bg)", "var(--accent-base)", "Workspace rules", "Filter the noise for everyone."], close)}
           {F("/rules", ["filter", "var(--bg-hover)", "var(--icon-primary)", "Personal filters", "Mute what you don’t need."], close)}
@@ -39,9 +39,9 @@ function Menus({ close }: { close: () => void }): Record<string, { width: number
       body: <>
         <div className="mega-col" style={{ width: 240 }}><div className="mega-label">By team</div>
           {F("/product", ["settings", "var(--bg-hover)", "var(--icon-primary)", "Operations", "Quiet inboxes, clear owners."], close)}
-          {F("/product", ["star", "var(--tag-pink-bg)", "var(--avatar-pink)", "Agencies", "Client mail, chat and booking in one place."], close)}
-          {F("/booking", ["bolt", "var(--tag-orange-bg)", "var(--avatar-orange)", "Sales", "Book meetings, track every thread."], close)}
-          {F("/product", ["comment", "var(--tag-blue-bg)", "var(--avatar-blue)", "Customer support", "Shared addresses with assignments."], close)}</div>
+          {F("/product", ["star", "var(--tag-pink-bg)", "var(--tag-pink-fg)", "Agencies", "Client mail, chat and booking in one place."], close)}
+          {F("/booking", ["bolt", "var(--tag-orange-bg)", "var(--tag-orange-fg)", "Sales", "Book meetings, track every thread."], close)}
+          {F("/product", ["comment", "var(--tag-blue-bg)", "var(--tag-blue-fg)", "Customer support", "Shared addresses with assignments."], close)}</div>
         <div className="mega-col" style={{ width: 200 }}><div className="mega-label">By size</div>
           {L("/signup", "bolt", "Startups", close)}{L("/signup", "users", "Growing teams", close)}{L("/vs-slack", "lock", "Enterprise", close)}{L("/signup", "star", "Nonprofits", close)}</div>
         <div className="mega-col" style={{ width: 200 }}><div className="mega-label">Use cases</div>
@@ -56,9 +56,9 @@ function Menus({ close }: { close: () => void }): Record<string, { width: number
       width: 820,
       body: <>
         <div className="mega-col" style={{ width: 240 }}><div className="mega-label">Learn</div>
-          {F("/faq", ["doc", "var(--tag-blue-bg)", "var(--avatar-blue)", "Help center", "Answers in minutes."], close)}
+          {F("/faq", ["doc", "var(--tag-blue-bg)", "var(--tag-blue-fg)", "Help center", "Answers in minutes."], close)}
           {F("/rules", ["board", "var(--tag-green-bg)", "var(--feedback-success)", "Guides", "Set up rules, migrate mail."], close)}
-          {F("/demo", ["phone", "var(--tag-orange-bg)", "var(--avatar-orange)", "Book a demo", "A 30-minute walkthrough for your team."], close, true)}</div>
+          {F("/demo", ["phone", "var(--tag-orange-bg)", "var(--tag-orange-fg)", "Book a demo", "A 30-minute walkthrough for your team."], close, true)}</div>
         <a className="promo promo-blue" href="/rules" style={{ width: 282, alignSelf: "flex-start" }} onClick={close}>
           <span className="promo-tile">5 rules every<br />team should start with</span><span className="eyebrow">Guide · 6 min read</span>
           <p>From “mute #random” to snoozing newsletters — the quick wins.</p></a>

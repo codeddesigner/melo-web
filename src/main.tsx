@@ -16,7 +16,7 @@ function Routes() {
   const { parts, query } = useLocation();
   const top = parts[0] ?? "";
   const isApp = top === "app";
-  useEffect(() => { document.body.style.background = isApp ? "#f7f7f7" : ""; }, [isApp]);
+  useEffect(() => { document.body.style.background = isApp ? "#f7f8fa" : ""; }, [isApp]);
   useEffect(() => { if (top === "index") navigate("/", { replace: true }); }, [top]);
   if (top === "index") return null;
   const personalRoot = top === "personal" && parts.length === 1 || onPersonalHost() && top === "";

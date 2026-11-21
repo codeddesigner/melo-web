@@ -4,7 +4,7 @@ import { cx } from "../../lib/util";
 export function Header({ title, sub, action }: { title: string; sub?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 px-6 pt-8 pb-6 md:px-10">
-      <div><h2 className="text-[22px] font-medium tracking-[-.2px]">{title}</h2>{sub && <p className="mt-1.5 max-w-2xl text-sm text-ink-2">{sub}</p>}</div>
+      <div><h2 className="text-[20px] leading-[26px] font-medium tracking-[-.3px]">{title}</h2>{sub && <p className="mt-1.5 max-w-2xl text-[13px] text-ink-2">{sub}</p>}</div>
       {action}
     </div>
   );

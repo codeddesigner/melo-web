@@ -9,11 +9,11 @@ import { Panel, SideItem, SideLabel, SideNav, SideSearch } from "./AppRoot";
 
 const STATUS: { key: TaskStatus; label: string; dot: string }[] = [
   { key: "in_progress", label: "In progress", dot: "#1b87f5" },
-  { key: "todo", label: "To do", dot: "#8a8a8a" },
+  { key: "todo", label: "To do", dot: "#80868b" },
   { key: "done", label: "Done", dot: "#2ea44f" },
 ];
 const PRIO: Record<Priority, { label: string; color: string }> = {
-  urgent: { label: "Urgent", color: "#d93025" }, high: { label: "High", color: "#f0a01e" }, normal: { label: "Normal", color: "#1b87f5" }, low: { label: "Low", color: "#8a8a8a" },
+  urgent: { label: "Urgent", color: "#e5484d" }, high: { label: "High", color: "#f0a01e" }, normal: { label: "Normal", color: "#1b87f5" }, low: { label: "Low", color: "#80868b" },
 };
 type View = "mine" | "by-me" | "week" | "all" | "done";
 

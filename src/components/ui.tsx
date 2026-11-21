@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Icon, type IconName } from "./icons";
-import { colorFor, cx, initials } from "../lib/util";
+import { avatarColors, cx, initials } from "../lib/util";
 
 /* ---- Motion helpers ---- */
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -59,7 +59,7 @@ const BTN: Record<BtnVariant, string> = {
   line: "bg-white text-ink shadow-[inset_0_0_0_1px_var(--color-line-2)] hover:bg-subtle",
   ghost: "text-ink hover:bg-hover",
   danger: "bg-bad-soft text-bad hover:bg-[#fbdad6]",
-  accent: "bg-accent text-white hover:bg-accent-ink",
+  accent: "bg-accent text-[var(--color-accent-on,#fff)] hover:brightness-95",
 };
 export function Button({ variant = "dark", size = "m", icon, children, className, busy, ...rest }: {
   variant?: BtnVariant; size?: "s" | "m" | "l"; icon?: IconName; children?: ReactNode; className?: string; busy?: boolean;
@@ -124,10 +124,11 @@ export function Toggle({ on, onChange, label, disabled }: { on: boolean; onChang
   );
 }
 
-export function Avatar({ name, id, size = 28, className, dark }: { name: string | null | undefined; id?: string | null; size?: number; className?: string; dark?: boolean }) {
+export function Avatar({ name, id, size = 28, className, dark, soft }: { name: string | null | undefined; id?: string | null; size?: number; className?: string; dark?: boolean; soft?: boolean }) {
+  const [bg, fg] = soft ? ["#e8eaed", "#444746"] : avatarColors(id ?? name);
   return (
-    <span className={cx("inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white select-none", className)}
-      style={{ width: size, height: size, fontSize: Math.max(9, Math.round(size * 0.36)), background: dark ? "#1f1f1f" : colorFor(id ?? name) }}>
+    <span className={cx("inline-flex shrink-0 items-center justify-center rounded-full font-medium select-none", className)}
+      style={{ width: size, height: size, fontSize: Math.max(9, Math.round(size * 0.36)), background: dark ? "#1f1f1f" : bg, color: dark ? "#fff" : fg }}>
       {initials(name)}
     </span>
   );

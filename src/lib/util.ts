@@ -8,6 +8,13 @@ export function initials(s: string | null | undefined) {
 }
 
 const PALETTE = ["#f07b1e", "#14a3a0", "#5b3fd9", "#e2468b", "#1b87f5", "#2ea44f", "#1f1f1f"];
+/* Avatars (Figma avatar/*): soft background with a matching ink */
+const AVATAR: [string, string][] = [["#ffe0cc", "#8a4100"], ["#c8ece9", "#00605c"], ["#e8def8", "#5b3fbf"], ["#fddbe7", "#9c2459"], ["#d3e3fd", "#0b57d0"], ["#c9eed3", "#146c2e"], ["#e8eaed", "#444746"]];
+export function avatarColors(key: string | null | undefined) {
+  let h = 0;
+  for (const c of String(key ?? "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return AVATAR[h % AVATAR.length];
+}
 export function colorFor(key: string | null | undefined) {
   let h = 0;
   for (const c of String(key ?? "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
