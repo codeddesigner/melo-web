@@ -16,7 +16,7 @@ export default function PersonalHome() {
   const signedIn = Boolean(useSession());
   const toast = useToast();
   const soon = (what: string) => toast(`${what} is coming soon`, "info");
-  useEffect(() => { document.title = "Melo — Mail from people first. Everything else, later."; window.scrollTo(0, 0); }, []);
+  useEffect(() => { document.title = "Melo | Relatable Email for the modern world"; window.scrollTo(0, 0); }, []);
   const start = signedIn ? "/app" : personalSignup();
   const startLabel = signedIn ? "Open Melo" : "Get Melo free";
   return (

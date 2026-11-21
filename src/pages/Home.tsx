@@ -59,7 +59,7 @@ function useSectionLinks(openDemo: () => void) {
 export default function Home() {
   const signedIn = Boolean(useSession());
   const [demo, setDemo] = useState(false);
-  useEffect(() => { document.title = "Melo for Business — Mail, team chat and work in one calm place"; }, []);
+  useEffect(() => { document.title = "MeloBusiness: Relatable Email for the modern workforce"; }, []);
   useEffect(() => { const f = () => setDemo(true); window.addEventListener("melo:demo", f); return () => window.removeEventListener("melo:demo", f); }, []);
   useReveal(); useHeroMotion();
   useSectionLinks(() => setDemo(true));

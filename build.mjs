@@ -58,10 +58,10 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Melo for Business — Mail, team chat and work in one calm place</title>
+<title>MeloBusiness: Relatable Email for the modern workforce</title>
 <meta name="description" content="Melo for Business brings your company email, chats, tasks and calendar together — with workspace rules that keep the noise out for everyone.">
 <meta name="theme-color" content="#1b87f5">
-<meta property="og:title" content="Melo for Business">
+<meta property="og:title" content="MeloBusiness: Relatable Email for the modern workforce">
 <meta property="og:description" content="Mail, team chat and work. Finally in one calm place.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://business.melo.to/">
@@ -90,10 +90,10 @@ fs.writeFileSync(path.join(out, "business.html"), html);
 fs.writeFileSync(path.join(out, "404.html"), html);
 /* melo.to gets the same app with Melo Personal's title and link previews */
 const personalHtml = html
-  .replace(/<title>[^<]*<\/title>/, "<title>Melo — Mail from people first. Everything else, later.</title>")
+  .replace(/<title>[^<]*<\/title>/, "<title>Melo | Relatable Email for the modern world</title>")
   .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.">')
   .replace('content="#1b87f5"', 'content="#f1e289"')
-  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Melo — a calm inbox for your personal email">')
+  .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="Melo | Relatable Email for the modern world">')
   .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="Mail from people first. Everything else, later. Free forever.">')
   .replace('content="https://business.melo.to/"', 'content="https://melo.to/"')
   .replace('content="Melo for Business">\n<meta property="og:image"', 'content="Melo">\n<meta property="og:image"')
