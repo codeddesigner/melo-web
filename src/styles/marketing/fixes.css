@@ -67,3 +67,6 @@
   .split { padding-left: 64px !important; padding-right: 64px !important; max-width: 1440px; margin-left: auto; margin-right: auto; }
   .feat, .vs, .faq, .site-foot { padding-left: 64px !important; padding-right: 64px !important; }
 }
+
+/* Headings never leave a word on its own line */
+.hero h1, .feat-title, .h-display, .vs-title, .faq-title, h1, h2 { text-wrap: balance; }

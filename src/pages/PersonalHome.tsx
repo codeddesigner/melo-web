@@ -9,7 +9,7 @@ import { useToast } from "../components/ui";
 import { MockWindow, PersonalMock, Scaled, type MockView } from "../personal/Mock";
 import { SiteToggle } from "../marketing/SiteToggle";
 
-const H2 = "font-display font-medium tracking-[-0.015em] text-ink";
+const H2 = "font-display font-medium tracking-[-0.015em] text-ink text-balance";
 const BTN = "inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-[15px] sm:h-[54px] sm:w-auto sm:px-6 font-semibold transition-[background-color,transform,box-shadow] duration-200 active:scale-[.98]";
 
 export default function PersonalHome() {
@@ -25,11 +25,11 @@ export default function PersonalHome() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f3e48f_0%,#f7eebb_38%,#fbf8e6_68%,#ffffff_100%)] px-4 pt-14 pb-16 text-center md:pt-[72px]">
-          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink animate-fade-up sm:text-[60px] lg:text-[76px]">Mail from people first.<br />Everything else, later.</h1>
+          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance animate-fade-up sm:text-[60px] lg:text-[76px]">Mail from people first.<br />Everything else, later.</h1>
           <p className="mx-auto mt-6 max-w-[680px] text-[17px] leading-[1.45] text-ink-sec animate-fade-up [animation-delay:60ms] md:text-[19px]">Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.</p>
           <div className="mx-auto mt-7 flex max-w-[360px] flex-col justify-center gap-3 animate-fade-up [animation-delay:120ms] sm:max-w-none sm:flex-row">
             <Link to={start} className={cx(BTN, "bg-inverse text-white hover:bg-[#333]")}>{startLabel}</Link>
-            <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/70 text-ink backdrop-blur hover:bg-white")}>Download the app</button>
+            <button type="button" onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth", block: "start" })} className={cx(BTN, "border border-white/50 bg-white/70 text-ink backdrop-blur hover:bg-white")}>See how it works</button>
           </div>
           <p className="mt-7 text-[13px] text-ink-sec">Free forever · No ads · Works with Gmail, Outlook and iCloud</p>
           <div className="mx-auto mt-7 max-w-[1180px] animate-fade-up [animation-delay:180ms]"><MockWindow view="inbox" /></div>
@@ -89,7 +89,7 @@ export default function PersonalHome() {
         <section className="bg-app px-6 py-16 md:px-16 md:py-20">
           <div className="mx-auto flex max-w-[1312px] flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
             <div className="flex flex-col gap-4 lg:w-[520px]">
-              <h2 className={cx(H2, "text-[36px] leading-[1.05] md:text-[44px]")}>Private by design</h2>
+              <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Private by design</h2>
               <p className="text-[18px] leading-[22px] text-ink-sec">Your mail is encrypted at rest and in transit. No ads, ever — we never sell your data or train AI on it.</p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -103,7 +103,7 @@ export default function PersonalHome() {
         {/* Comparison */}
         <section className="bg-app px-4 pb-16 md:px-[120px] md:pb-[100px]">
           <div className="mx-auto flex max-w-[620px] flex-col items-center gap-4 pt-4 text-center">
-            <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[48px]")}>Why people switch</h2>
+            <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Why people switch</h2>
             <p className="text-[17px] leading-[22px] text-ink-sec md:text-[19px]">Compared with the free inbox most people use today.</p>
           </div>
           <div className="mx-auto mt-12 max-w-[1200px] overflow-hidden rounded-[20px] bg-white text-[14px]">
@@ -119,7 +119,7 @@ export default function PersonalHome() {
         {/* Pricing */}
         <section id="pricing" className="scroll-mt-24 px-4 py-16 md:px-40 md:py-[100px]">
           <div className="mx-auto flex max-w-[694px] flex-col items-center gap-4 text-center">
-            <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[48px]")}>Free forever. Plus if you want more.</h2>
+            <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Free forever. Plus if you want more.</h2>
             <p className="text-[17px] leading-[22px] text-ink-sec md:text-[19px]">Every plan has Screener, smart tabs and no ads.</p>
           </div>
           <div className="mx-auto mt-12 grid max-w-[1120px] gap-5 md:grid-cols-3">
@@ -131,18 +131,17 @@ export default function PersonalHome() {
 
         {/* FAQ */}
         <section id="faq" className="scroll-mt-24 px-4 pt-10 pb-16 md:px-[120px] md:pb-[100px]">
-          <h2 className={cx(H2, "text-center text-[36px] leading-[1.08] md:text-[48px]")}>Questions, answered</h2>
+          <h2 className={cx(H2, "text-center text-[36px] leading-[1.08] md:text-[52px]")}>Questions, answered</h2>
           <Faq />
         </section>
 
         {/* CTA band */}
         <section className="px-4 pb-20 md:px-16">
           <div className="flex flex-col items-center gap-7 rounded-[32px] bg-inverse px-6 py-16 text-center md:py-24">
-            <h2 className="font-display text-[38px] leading-[1.05] font-medium tracking-[-0.01em] text-white md:text-[60px]">Give your inbox some quiet.</h2>
+            <h2 className="font-display text-balance text-[36px] leading-[1.08] font-medium tracking-[-0.015em] text-white md:text-[52px]">Give your inbox some quiet.</h2>
             <p className="text-[17px] leading-[22px] text-white/90 md:text-[19px]">Claim your free @melo.to address, or bring Gmail, Outlook or iCloud.</p>
             <div className="flex w-full max-w-[360px] flex-col justify-center gap-3 sm:max-w-none sm:w-auto sm:flex-row">
               <Link to={start} className={cx(BTN, "bg-white text-ink hover:bg-[#f2f2f2]")}>{startLabel}</Link>
-              <button type="button" onClick={() => soon("The Melo app")} className={cx(BTN, "border border-white/50 bg-white/[.18] text-white hover:bg-white/25")}>Download the app</button>
             </div>
           </div>
         </section>
@@ -161,7 +160,6 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
   const menus: Record<string, [string, string, () => void][]> = {
     Product: [["Primary", "People you know, on top", () => scrollTo("product")], ["Screener", "First-time senders wait", () => scrollTo("product")], ["Later", "Snooze anything", () => scrollTo("product")], ["Summaries", "Long threads in one line", () => scrollTo("product")]],
     Features: [["Smart filters", "Newsletters, receipts, updates", () => scrollTo("features")], ["Your own address", "you@melo.to, free", () => navigate(start)], ["Privacy", "No ads, ever", () => scrollTo("features")]],
-    Download: [["macOS", "Apple silicon & Intel", () => soon("Melo for macOS")], ["Windows", "10 and 11", () => soon("Melo for Windows")], ["iOS", "iPhone & iPad", () => soon("Melo for iOS")], ["Android", "Phones & tablets", () => soon("Melo for Android")]],
   };
   return (
     <header className={cx("sticky top-0 z-40 transition-[background-color,box-shadow] duration-300", scrolled ? "bg-white/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur" : "bg-[#f3e48f]")}>
@@ -281,7 +279,7 @@ function Footer({ soon }: { soon: (w: string) => void }) {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:gap-12">
           {col("Product", [["Primary", go("product")], ["Screener", go("product")], ["Later", go("product")], ["Summaries", go("product")], ["Melo for Business", businessHome()], ["Pricing", go("pricing")]])}
           {col("Company", [["About", () => soon("About")], ["For Business", businessHome()], ["Careers", () => soon("Careers")], ["Blog", () => soon("The blog")], ["Press", () => soon("Press")]])}
-          {col("Download", [["Help center", go("faq")], ["Guides", () => soon("Guides")], ["Status", () => soon("Status")], ["Security", go("features")], ["Download", () => soon("The Melo app")]])}
+          {col("Resources", [["Help center", go("faq")], ["Guides", () => soon("Guides")], ["Status", () => soon("Status")], ["Security", go("features")]])}
           {col("Legal", [["Privacy", () => soon("The privacy page")], ["Terms", () => soon("The terms page")], ["DPA", () => soon("The DPA")], ["Cookies", () => soon("The cookie page")]])}
         </div>
       </div>

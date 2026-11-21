@@ -330,7 +330,6 @@ function Done({ s, soon }: P) {
     [s.address ? `Address claimed — ${s.address}` : `Using ${s.email}`, true, null],
     ["Connect Gmail, Outlook or iCloud", false, () => soon("Connecting other accounts")],
     [`${n} filter${n === 1 ? "" : "s"} turned on`, true, null],
-    ["Get Melo on your phone and computer", false, () => soon("The Melo app")],
   ];
   useEffect(() => { document.title = "You’re all set — Melo"; }, []);
   return (
@@ -348,13 +347,6 @@ function Done({ s, soon }: P) {
             </li>
           ))}
         </ul>
-        <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-          {([["macOS", "Apple silicon & Intel"], ["Windows", "10 and 11"], ["iOS", "iPhone & iPad"], ["Android", "Phones & tablets"]] as const).map(([os, d]) => (
-            <button key={os} type="button" onClick={() => soon(`Melo for ${os}`)} className="flex flex-col items-start gap-1 rounded-2xl border border-line p-3 text-left hover:bg-subtle">
-              <Icon name={"grid" as IconName} className="mb-1 size-4 text-icon" /><b className="text-[13px] font-medium">{os}</b><span className="text-[11px] text-ink-3">{d}</span><span className="text-[12px] font-medium text-pa-text">Download</span>
-            </button>
-          ))}
-        </div>
         <button type="button" onClick={() => navigate("/app/mail", { replace: true })} className="flex h-11 items-center rounded-full bg-inverse px-14 text-[14px] font-semibold text-white hover:bg-[#333]">Open Melo</button>
         <p className="text-[12px] text-ink-3">Tip: press <kbd className="rounded-md border border-line px-1.5 py-0.5 font-sans">⌘</kbd> <kbd className="rounded-md border border-line px-1.5 py-0.5 font-sans">K</kbd> anywhere to search mail and people</p>
       </div>
