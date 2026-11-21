@@ -53,7 +53,7 @@
   "rewrites": [
     {
       "source": "/((?!assets/|fonts/|favicon\\.svg|logo\\.svg|[a-z]+\\.css).*)",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ],
   "headers": [
