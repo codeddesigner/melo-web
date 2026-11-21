@@ -94,13 +94,13 @@
 @layer base {
   .melo-app, .melo-app * { box-sizing: border-box; }
   .melo-app { font-family: var(--font-sans); font-size: 14px; line-height: 20px; color: var(--color-ink); -webkit-font-smoothing: antialiased; }
-  .melo-app :where(h1, h2, h3, h4, h5, p, ul, ol, figure) { margin: 0; padding: 0; }
-  .melo-app :where(ul, ol) { list-style: none; }
-  .melo-app :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+  .melo-app :where(h1, h2, h3, h4, h5, p, ul, ol, figure):not(:where(.site-scope, .site-scope *, .btn)) { margin: 0; padding: 0; }
+  .melo-app :where(ul, ol):not(:where(.site-scope, .site-scope *, .btn)) { list-style: none; }
+  .melo-app :where(button):not(:where(.site-scope, .site-scope *, .btn)) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
   .melo-app :where(button:disabled) { cursor: default; }
-  .melo-app :where(input, textarea, select) { font: inherit; color: inherit; margin: 0; border: 0 solid; background: transparent; outline: none; }
-  .melo-app :where(*) { border-width: 0; border-style: solid; border-color: var(--color-line); }
-  .melo-app :where(a) { color: inherit; text-decoration: none; }
+  .melo-app :where(input, textarea, select):not(:where(.site-scope, .site-scope *, .btn)) { font: inherit; color: inherit; margin: 0; border: 0 solid; background: transparent; outline: none; }
+  .melo-app :where(*):not(:where(.site-scope, .site-scope *, .btn)) { border-width: 0; border-style: solid; border-color: var(--color-line); }
+  .melo-app :where(a):not(:where(.site-scope, .site-scope *, .btn)) { color: inherit; text-decoration: none; }
   .melo-app :where(svg) { flex-shrink: 0; }
   .melo-app :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 6px; }
   .melo-app ::placeholder { color: var(--color-ink-3); opacity: 1; }

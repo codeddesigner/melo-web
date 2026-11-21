@@ -1,5 +1,5 @@
 /* Melo Personal — website (Figma: "Melo Personal — Website (Desktop)" + mobile). Lives at melo.to. */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, navigate } from "../lib/router";
 import { useSession } from "../lib/session";
 import { businessHome, personalHome, personalSignup } from "../lib/site";
@@ -10,7 +10,6 @@ import { MockWindow, PersonalMock, Scaled, type MockView } from "../personal/Moc
 import { SiteToggle } from "../marketing/SiteToggle";
 
 const H2 = "font-display font-medium tracking-[-0.015em] text-ink text-balance";
-const BTN = "inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-[15px] sm:h-[54px] sm:w-auto sm:px-6 font-semibold transition-[background-color,transform,box-shadow] duration-200 active:scale-[.98]";
 
 export default function PersonalHome() {
   const signedIn = Boolean(useSession());
@@ -28,9 +27,9 @@ export default function PersonalHome() {
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f3e48f_0%,#f7eebb_38%,#fbf8e6_68%,#ffffff_100%)] px-4 pt-14 pb-16 text-center md:pt-[72px]">
           <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance lg:text-wrap animate-fade-up max-w-[820px] sm:text-[60px] lg:text-[76px]">Relatable email for the modern world.</h1>
           <p className="mx-auto mt-6 max-w-[680px] text-[17px] leading-[1.45] text-ink-sec animate-fade-up [animation-delay:60ms] md:text-[19px]">Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.</p>
-          <div className="mx-auto mt-7 flex max-w-[360px] flex-col justify-center gap-3 animate-fade-up [animation-delay:120ms] sm:max-w-none sm:flex-row">
-            <Link to={start} className={cx(BTN, "bg-inverse text-white hover:bg-[#333]")}>{startLabel}</Link>
-            <button type="button" onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth", block: "start" })} className={cx(BTN, "border border-white/50 bg-white/70 text-ink backdrop-blur hover:bg-white")}>See how it works</button>
+          <div className="hero-ctas">
+            <Link to={start} className="btn btn-dark btn-lg">{startLabel}</Link>
+            <button type="button" onClick={() => document.getElementById("product")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="btn btn-light btn-lg">See how it works</button>
           </div>
           <p className="mt-7 text-[13px] text-ink-sec">Free forever · No ads · Works with Gmail, Outlook and iCloud</p>
           <div className="mx-auto mt-7 max-w-[1180px] animate-fade-up [animation-delay:180ms]"><div data-pm-tilt=""><MockWindow view="inbox" /></div></div>
@@ -42,19 +41,7 @@ export default function PersonalHome() {
           <div data-pm-stagger="" className="flex flex-wrap justify-center gap-x-[72px] gap-y-3 font-display text-[22px] font-medium opacity-55">{["Gmail", "Outlook", "iCloud Mail", "Yahoo Mail", "Any IMAP"].map((n) => <span key={n}>{n}</span>)}</div>
         </section>
 
-        {/* Four tabs */}
-        <section id="product" className="scroll-mt-24 px-4 py-16 md:px-16 md:py-24">
-          <div data-pm="" className="mx-auto flex max-w-[656px] flex-col items-center gap-[18px] text-center">
-            <h2 className={cx(H2, "text-[36px] leading-[1.08] md:text-[52px]")}>Quiet, without missing a thing.</h2>
-            <p className="text-[17px] leading-[1.5] text-ink-sec md:text-[19px]">Melo sorts every email the moment it arrives, so the ones from people are always on top.</p>
-          </div>
-          <div data-pm-stagger="" className="mx-auto mt-10 grid max-w-[1312px] gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <TabCard bg="#dceeff" title="Primary" body="Mail from people you know, always on top. Everything else waits a tab away." view="inbox" />
-            <TabCard bg="#fce2ef" title="Screener" body="First-time senders wait until you say yes. Strangers never reach Primary." view="screener" />
-            <TabCard bg="#ddf3e4" title="Later" body="Snooze anything. Newsletters arrive Monday at 8 instead of all week." view="later" />
-            <TabCard bg="#fde8d4" title="Summaries" body="Long threads in one line, with one-tap replies." view="thread" />
-          </div>
-        </section>
+        <PersonalFeatures />
 
         {/* Sorted before you open it */}
         <section id="features" className="scroll-mt-24 px-4 py-10 md:px-16">
@@ -130,11 +117,7 @@ export default function PersonalHome() {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="scroll-mt-24 px-4 pt-10 pb-16 md:px-[120px] md:pb-[100px]">
-          <h2 data-pm="" className={cx(H2, "text-center text-[36px] leading-[1.08] md:text-[52px]")}>Questions, answered</h2>
-          <Faq />
-        </section>
+        <PersonalFaq />
 
         {/* CTA band */}
         <section className="px-4 pb-20 md:px-16">
@@ -142,7 +125,7 @@ export default function PersonalHome() {
             <h2 className="font-display text-balance text-[36px] leading-[1.08] font-medium tracking-[-0.015em] text-white md:text-[52px]">Give your inbox some quiet.</h2>
             <p className="text-[17px] leading-[22px] text-white/90 md:text-[19px]">Claim your free @melo.to address, or bring Gmail, Outlook or iCloud.</p>
             <div className="flex w-full max-w-[360px] flex-col justify-center gap-3 sm:max-w-none sm:w-auto sm:flex-row">
-              <Link to={start} className={cx(BTN, "bg-white text-ink hover:bg-[#f2f2f2]")}>{startLabel}</Link>
+              <Link to={start} className="btn btn-light btn-lg">{startLabel}</Link>
             </div>
           </div>
         </section>
@@ -183,22 +166,13 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
         <span className="flex-1" />
         <SiteToggle current="personal" className="hidden xl:grid" />
         {!signedIn && <Link to="/signin" className="hidden text-[14px] font-medium hover:underline md:block">Sign in</Link>}
-        <Link to={start} className="flex h-10 shrink-0 items-center rounded-full bg-inverse px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#333]">{startLabel}</Link>
+        <Link to={start} className="btn btn-dark shrink-0">{startLabel}</Link>
       </nav>
       <div className="flex justify-center pb-3 xl:hidden"><SiteToggle current="personal" /></div>
     </header>
   );
 }
 
-function TabCard({ bg, title, body, view }: { bg: string; title: string; body: string; view: MockView }) {
-  return (
-    <article className="group flex h-[470px] flex-col overflow-hidden rounded-[24px] pt-7 pl-6 transition-transform duration-300 hover:-translate-y-1" style={{ background: bg }}>
-      <h3 className="font-display text-[24px] leading-[26px] font-medium">{title}</h3>
-      <p className="mt-4 max-w-[265px] pr-6 text-[14px] leading-[20px] text-ink-sec">{body}</p>
-      <div className="mt-5 w-[820px] overflow-hidden rounded-tl-2xl shadow-pop transition-transform duration-500 group-hover:-translate-x-2"><Scaled><PersonalMock view={view} /></Scaled></div>
-    </article>
-  );
-}
 
 function AddressVisual() {
   return (
@@ -227,7 +201,7 @@ function Cell({ v, muted }: { v: boolean | string; muted?: boolean }) {
 }
 
 function Plan({ name, badge, price, per, blurb, cta, to, onClick, items, dark }: { name: string; badge?: string; price: string; per: string; blurb: string; cta: string; to?: string; onClick?: () => void; items: string[]; dark?: boolean }) {
-  const btn = cx("flex h-12 w-full items-center justify-center rounded-full text-[14px] font-semibold transition-colors", dark ? "bg-white text-ink hover:bg-[#eee]" : "bg-inverse text-white hover:bg-[#333]");
+  const btn = cx("btn btn-lg w-full", dark ? "btn-light" : "btn-dark");
   return (
     <div className={cx("flex flex-col gap-5 rounded-[24px] p-8", dark ? "bg-inverse text-white" : "bg-app")}>
       <div className="flex h-7 items-center gap-2"><b className="font-display text-[22px] leading-[22px] font-medium">{name}</b>{badge && <span className="rounded-full bg-tag-purple-bg px-2.5 py-[3px] text-[12px] font-semibold text-ink-sec">{badge}</span>}</div>
@@ -247,23 +221,6 @@ const QA: [string, string][] = [
   ["Can I use my own domain?", "Yes, with Plus. Add your domain, copy a few DNS records and Melo checks them for you."],
   ["Can I bring my old email with me?", "Yes. Connect your old account and your mail and folders come with you, so everything is in one place."],
 ];
-function Faq() {
-  const [open, setOpen] = useState(0);
-  return (
-    <div data-pm-stagger="" className="mx-auto mt-12 max-w-[880px]">
-      {QA.map(([q, a], k) => (
-        <div key={q} className="border-b border-line">
-          <button type="button" aria-expanded={open === k} onClick={() => setOpen(open === k ? -1 : k)} className="flex w-full items-center gap-4 py-[22px] text-left text-[17px] leading-[22px] font-semibold md:text-[19px]">
-            <span className="flex-1">{q}</span><Icon name={open === k ? "chev-down" : "plus"} className="size-4 shrink-0 transition-transform duration-300" />
-          </button>
-          <div className={cx("grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(.22,1,.36,1)]", open === k ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
-            <p className="min-h-0 overflow-hidden pb-0 text-[14px] leading-[20px] text-ink-sec"><span className="block pb-[22px]">{a}</span></p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function Footer({ soon }: { soon: (w: string) => void }) {
   const col = (title: string, links: [string, (() => void) | string][]) => (
@@ -295,9 +252,9 @@ function usePersonalMotion() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const root = document.documentElement; root.classList.add("pm-on");
-    const els = [...document.querySelectorAll<HTMLElement>("[data-pm],[data-pm-stagger]")];
+    const els = [...document.querySelectorAll<HTMLElement>("[data-pm],[data-pm-stagger],.reveal")];
     document.querySelectorAll<HTMLElement>("[data-pm-stagger]").forEach((g) => [...g.children].forEach((c, i) => (c as HTMLElement).style.setProperty("--pm-i", String(Math.min(i, 8)))));
-    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("pm-in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("pm-in", "in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     els.forEach((e) => io.observe(e));
     const tilt = document.querySelector<HTMLElement>("[data-pm-tilt]"), drift = [...document.querySelectorAll<HTMLElement>("[data-pm-drift]")];
     const desk = window.matchMedia("(min-width: 961px)");
@@ -311,4 +268,58 @@ function usePersonalMotion() {
     window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onScroll); frame();
     return () => { io.disconnect(); root.classList.remove("pm-on"); window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
   }, []);
+}
+
+/* Same layout and motion as the Business "Four tabs" section */
+const FEATS: [string, string, MockView][] = [
+  ["Primary", "Mail from people you know, always on top. Everything else waits a tab away.", "inbox"],
+  ["Screener", "First-time senders wait until you say yes. Strangers never reach Primary.", "screener"],
+  ["Later", "Snooze anything. Newsletters arrive Monday at 8 instead of all week.", "later"],
+  ["Summaries", "Long threads in one line, with one-tap replies.", "thread"],
+];
+function PersonalFeatures() {
+  const [cur, setCur] = useState(0), [auto, setAuto] = useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches), [inView, setInView] = useState(false), [hover, setHover] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => { const el = ref.current; if (!el) return; const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 }); io.observe(el); return () => io.disconnect(); }, []);
+  const running = auto && inView && !hover;
+  useEffect(() => { if (!running) return; const t = setInterval(() => setCur((c) => (c + 1) % FEATS.length), 6000); return () => clearInterval(t); }, [running, cur]);
+  return (
+    <section className={`site-scope section feat scroll-mt-24${running ? " m-auto" : ""}`} id="product" ref={ref} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <div className="container feat-grid">
+        <div className="feat-copy reveal">
+          <h2 className="feat-title">Quiet, without<br />missing a thing.</h2>
+          <div className="feat-list" role="tablist" aria-label="Melo tabs">
+            {FEATS.map(([n, d], i) => (
+              <button type="button" key={n + (i === cur && running ? cur : "")} className={`feat-item${i === cur ? " active" : ""}`} role="tab" aria-selected={i === cur} aria-controls={`pfeat-stage-${i}`}
+                onClick={() => { setAuto(false); setCur(i); }} onKeyDown={(e) => { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setAuto(false); setCur((c) => (c + (e.key === "ArrowDown" ? 1 : FEATS.length - 1)) % FEATS.length); } }}>
+                <span className="feat-name">{n}</span><span className="feat-body"><span><span className="feat-desc">{d}</span></span></span></button>
+            ))}
+          </div>
+          <p className="feat-foot">Melo sorts every email the moment it arrives, so the ones from people are always on top. Nothing is ever deleted.</p>
+        </div>
+        <div className="feat-panel reveal">
+          {FEATS.map(([, , v], i) => <div key={v} className={`feat-stage${i === cur ? " active" : ""}`} id={`pfeat-stage-${i}`} role="tabpanel"><div className="mini" aria-hidden="true">{Math.abs(i - cur) <= 1 || i === cur ? <MockWindow view={v} /> : null}</div></div>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* Same layout as the Business FAQ */
+function PersonalFaq() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section className="site-scope faq scroll-mt-24" id="faq">
+      <div className="faq-grid">
+        <h2 className="faq-title reveal">Frequently<br />asked<br />questions</h2>
+        <div className="faq-col">
+          <div className="faq-list">{QA.map(([q, a], i) => (
+            <div key={q} className={`faq-item m-in${open === i ? " open" : ""}`} style={{ ["--m-i" as string]: i }}>
+              <button type="button" className="faq-q" aria-expanded={open === i} onClick={() => setOpen(open === i ? -1 : i)}>{q}<Icon name="chev-down" className="icon" /></button>
+              <div className="faq-a"><div><p>{a}</p></div></div></div>))}</div>
+          <p className="faq-more">Still have more questions? <a href="mailto:hello@melo.to" className="underline">Email us</a>.</p>
+        </div>
+      </div>
+    </section>
+  );
 }
