@@ -20,12 +20,17 @@ function Routes() {
   useEffect(() => { if (top === "index") navigate("/", { replace: true }); }, [top]);
   if (top === "index") return null;
   const personalRoot = top === "personal" && parts.length === 1 || onPersonalHost() && top === "";
-  const page = personalRoot ? <PersonalHome /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
+  const businessRoot = top === "business" && parts.length === 1;
+  const page = personalRoot ? <PersonalHome /> : businessRoot ? <Home /> : top === "" || ["product", "rules", "booking", "vs-slack", "faq", "demo"].includes(top) && parts.length === 1 ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? (query.get("start") === "personal" || onPersonalHost() && !query.get("start") && !query.get("resume") && !query.get("join") ? <PersonalOnboarding /> : <SignUp />) : isApp ? <AppRoot /> : <NotFound />;
   return <Suspense fallback={<div className="min-h-screen" />}>{page}</Suspense>;
 }
 
 /* Old *.html links keep working */
 const legacy = location.pathname.match(/^\/(index|signin|signup|app)\.html$/);
 if (legacy) history.replaceState(null, "", (legacy[1] === "index" ? "/" : "/" + legacy[1]) + location.search + location.hash);
+
+/* Both front doors are one tap apart (Personal ⇄ Business): load the other one quietly so switching is instant */
+const idle = (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1200));
+idle(() => { void import("./pages/Home"); void import("./pages/PersonalHome"); });
 
 createRoot(document.getElementById("root")!).render(<ToastProvider><Routes /></ToastProvider>);

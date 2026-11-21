@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, navigate } from "../lib/router";
 import { Icon, type IconName } from "../components/icons";
 import { SiteToggle } from "./SiteToggle";
+import { businessHome } from "../lib/site";
 
 type Feature = [IconName, string, string, string, string]; // icon, bg, fg, title, desc
 const F = (href: string, [icon, bg, fg, title, desc]: Feature, onPick: () => void, demo?: boolean) => (
@@ -92,7 +93,7 @@ export function Header({ signedIn, onDemo }: { signedIn: boolean; onDemo: () => 
     <>
       <header className={`site-header${scrolled ? " scrolled" : ""}`} id="top">
         <nav className="nav" aria-label="Main">
-          <a href="/" className="logo" aria-label="Melo business home" onClick={(e) => { e.preventDefault(); navigate("/", { scroll: false }); window.scrollTo({ top: 0, behavior: "smooth" }); }}><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
+          <a href={businessHome()} className="logo" aria-label="Melo business home" onClick={(e) => { e.preventDefault(); navigate(businessHome(), { scroll: false }); window.scrollTo({ top: 0, behavior: "smooth" }); }}><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
           <ul className="nav-links">
             {Object.entries(menus).map(([name, m]) => (
               <li key={name} className={`nav-item${open === name ? " open" : ""}`} data-menu=""

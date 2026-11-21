@@ -5,10 +5,10 @@
 const host = () => (typeof location === "undefined" ? "" : location.hostname);
 export const onPersonalHost = () => /^(www\.)?melo\.to$/.test(host());
 export const onBusinessHost = () => host() === "business.melo.to";
-const live = () => onPersonalHost() || onBusinessHost();
 
-/* Links between the two sites */
-export const personalHome = () => (live() ? "https://melo.to/" : "/personal");
-export const businessHome = () => (live() ? "https://business.melo.to/" : "/");
+/* Links between the two sites stay on the current host, so switching never reloads the page:
+   melo.to/business shows Business, business.melo.to/personal shows Personal */
+export const personalHome = () => (onPersonalHost() ? "/" : "/personal");
+export const businessHome = () => (onPersonalHost() ? "/business" : "/");
 /* Personal sign-up: on melo.to plain /signup is personal; elsewhere it needs the flag */
 export const personalSignup = () => (onPersonalHost() ? "/signup" : "/signup?start=personal");

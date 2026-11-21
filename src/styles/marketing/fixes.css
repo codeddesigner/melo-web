@@ -45,3 +45,11 @@
 [style*="--avatar-blue"] { color: #0b57d0 !important; }
 [style*="--avatar-pink"] { color: #9c2459 !important; }
 [style*="--avatar-black"] { color: #444746 !important; }
+
+/* ---------- Heading standard (Figma, shared with Melo Personal) ----------
+   Display: SoapOpera Medium. Hero 76/1.04 -0.02em · Section 52/1.08 -0.015em · Lede 19/1.5 secondary */
+:is(h1, h2, h3, h4, h5):not(.melo-app :is(h1, h2, h3, h4, h5)) { font-weight: 500 !important; }
+.hero h1 { font-size: clamp(44px, 5.3vw, 76px) !important; line-height: 1.04 !important; letter-spacing: -0.02em !important; }
+.hero-sub { font-size: clamp(17px, 1.4vw, 19px) !important; line-height: 1.5 !important; }
+.feat-title, .h-display, .vs-title, .faq-title { font-size: clamp(36px, 3.62vw, 52px) !important; line-height: 1.08 !important; letter-spacing: -0.015em !important; }
+.lede { font-size: clamp(17px, 1.4vw, 19px) !important; line-height: 1.5 !important; color: var(--text-secondary); }

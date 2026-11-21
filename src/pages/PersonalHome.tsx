@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, navigate } from "../lib/router";
 import { useSession } from "../lib/session";
-import { businessHome, personalSignup } from "../lib/site";
+import { businessHome, personalHome, personalSignup } from "../lib/site";
 import { cx } from "../lib/util";
 import { Icon, type IconName } from "../components/icons";
 import { useToast } from "../components/ui";
@@ -20,7 +20,7 @@ export default function PersonalHome() {
   const start = signedIn ? "/app" : personalSignup();
   const startLabel = signedIn ? "Open Melo" : "Get Melo free";
   return (
-    <div className="melo-app bg-white text-ink">
+    <div className="melo-app bg-white text-ink animate-fade-in">
       <Nav signedIn={signedIn} start={start} startLabel={startLabel} soon={soon} />
       <main>
         {/* Hero */}
@@ -166,7 +166,7 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
   return (
     <header className={cx("sticky top-0 z-40 transition-[background-color,box-shadow] duration-300", scrolled ? "bg-white/90 shadow-[0_1px_0_var(--color-line)] backdrop-blur" : "bg-[#f3e48f]")}>
       <nav aria-label="Main" className="mx-auto flex h-[76px] max-w-[1440px] items-center gap-3 px-4 md:gap-8 md:px-16">
-        <Link to="/" aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[26px] w-auto md:h-[30px]" /></Link>
+        <Link to={personalHome()} aria-label="Melo home" className="shrink-0"><img src="/wordmark.svg" alt="melo" width={112} height={30} className="h-[26px] w-auto md:h-[30px]" /></Link>
         <ul className="hidden items-center gap-0.5 lg:flex">
           {Object.entries(menus).map(([name, items]) => (
             <li key={name} className="relative" data-pmenu="">

@@ -1,3 +1,4 @@
+import { businessHome } from "../lib/site";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
@@ -101,7 +102,7 @@ export default function Home() {
         <Faq />
       </main>
       <Footer signedIn={signedIn} />
-      {demo && <DemoDialog onClose={() => { setDemo(false); if (location.pathname === "/demo") navigate("/", { replace: true, scroll: false }); }} />}
+      {demo && <DemoDialog onClose={() => { setDemo(false); if (location.pathname === "/demo") navigate(businessHome(), { replace: true, scroll: false }); }} />}
     </>
   );
 }
@@ -213,7 +214,7 @@ function Footer({ signedIn }: { signedIn: boolean }) {
     <footer className="site-foot">
       <div className="sf-inner">
         <div className="sf-top">
-          <a href="/" className="sf-logo" aria-label="Melo business home"><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
+          <a href={businessHome()} onClick={(e) => { e.preventDefault(); navigate(businessHome()); }} className="sf-logo" aria-label="Melo business home"><img src="/logo.svg" alt="" width={150} height={30} className="logo-img" /></a>
           <nav className="sf-cols" aria-label="Footer">
             <div className="sf-col m-in"><h5>Product</h5><a href="/product">Mail</a><a href="/product">Team</a><a href="/product">Work</a><a href="/booking">Calendar</a><a href="/rules">Rules &amp; filters</a></div>
             <div className="sf-col m-in"><h5>Get started</h5>{signedIn ? <Link to="/app">Visit workspace</Link> : <><Link to="/signup">Create an account</Link><Link to="/signin">Sign in</Link></>}<Link to="/signup?start=melo">Free @melo.to address</Link></div>
