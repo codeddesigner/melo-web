@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { api, type MailMessage } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
 import { cx, dayLabel, fmtShort, fmtTime, isEmail } from "../lib/util";
 import { Icon } from "../components/icons";
-import { Avatar, Button, Empty, IconButton, Skeleton, Tag, useAsync, useToast } from "../components/ui";
+import { Avatar, Button, Empty, IconButton, Skeleton, Tag, useAsync, useExitGhost, useToast } from "../components/ui";
 import { useApp } from "./context";
 import { Panel, SideItem, SideLabel, SideNav, SideSearch } from "./AppRoot";
 
@@ -28,7 +29,7 @@ export default function Mail() {
   const nameFor = (email: string) => people.find((p) => p.email === email || (p.melo_address && `${p.melo_address}@melo.to` === email))?.name || email;
 
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === "c" && !compose && !(e.target as HTMLElement).closest("input,textarea,select,[contenteditable]")) { e.preventDefault(); setCompose({}); } };
+    const k = (e: KeyboardEvent) => { if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey && !compose && !document.querySelector("[aria-modal='true']") && !(e.target as HTMLElement).closest("input,textarea,select,[contenteditable]")) { e.preventDefault(); setCompose({}); } };
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   }, [compose]);
 
@@ -43,13 +44,13 @@ export default function Mail() {
         {addr && <SideItem icon="mail" label={addr} onClick={() => navigate("/app/mail/sent")} />}
         <SideItem icon="mail" label={account.email} onClick={() => navigate("/app/mail/inbox")} />
         <span className="flex-1" />
-        <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:shadow-pop">
+        <Link to="/app/settings/rules" className="mt-6 flex gap-2.5 rounded-2xl bg-white p-3.5 text-sm shadow-[0_0_0_1px_var(--color-line)] hover:-translate-y-px hover:shadow-pop">
           <Icon name="shield" className="mt-0.5 text-icon" /><span><b className="block font-medium">Workspace rules</b><span className="text-accent-ink">Review what gets filtered</span></span>
         </Link>
       </SideNav>
       <Panel className="flex-row">
-        <div className={cx("flex min-w-0 flex-col border-r border-line", open ? "hidden w-[420px] lg:flex" : "flex-1")}>
-          <header className="flex h-16 shrink-0 items-center gap-3 px-6">
+        <div className={cx("flex min-w-0 flex-col", open ? "hidden w-[420px] border-r border-line lg:flex" : "flex-1")}>
+          <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
             <h2 className="text-[22px] font-medium capitalize tracking-[-.2px]">{folder}</h2>
             <span className="flex-1" />
             {folder !== "inbox" && <IconButton icon="refresh" label="Refresh" onClick={() => (folder === "sent" ? sent : drafts).reload()} />}
@@ -101,8 +102,8 @@ function MailList({ items, folder, openId, nameFor, onDraft }: { items: MailMess
           <div key={m.id}>
             {header && <p className="px-3 pt-4 pb-1 text-xs text-ink-3">{header}</p>}
             <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/sent/${m.id}`))}
-              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors", openId === m.id ? "bg-accent-soft" : "hover:bg-hover")}>
-              {openId === m.id && <span className="absolute left-0 top-3 h-6 w-0.5 rounded bg-accent" />}
+              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left animate-fade-up active:scale-[.99]", openId === m.id ? "bg-accent-soft" : "hover:bg-hover")}>
+              {openId === m.id && <span className="absolute left-0 top-3 h-6 w-0.5 rounded bg-accent animate-fade-in" />}
               <Avatar name={to} id={m.to_addrs[0]} size={28} />
               <span className="min-w-0">
                 <span className="flex items-center gap-2"><span className="truncate font-medium">{folder === "drafts" && <span className="text-bad">Draft · </span>}To {to}</span></span>
@@ -126,7 +127,7 @@ function Reader({ m, nameFor, onClose, onForward }: { m: MailMessage; nameFor: (
         <span className="flex-1" />
         <Button variant="soft" size="s" icon="send" onClick={onForward}>Forward</Button>
       </header>
-      <div className="melo-scroll flex-1 overflow-y-auto px-8 py-6">
+      <div className="melo-scroll flex-1 overflow-y-auto px-5 py-6 md:px-8">
         <h2 className="text-[20px] font-medium">{m.subject || "(no subject)"}</h2>
         <div className="mt-4 flex items-center gap-3">
           <Avatar name={account.profile?.full_name || m.from_addr} size={36} dark />
@@ -150,6 +151,8 @@ function Composer({ initial, from, onClose, onSent }: { initial: Partial<MailMes
   const [body, setBody] = useState(initial.body ?? "");
   const [busy, setBusy] = useState(false);
   const [min, setMin] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useExitGhost(root, "rise-out");
   const commit = () => {
     const parts = typed.split(/[\s,;]+/).filter(Boolean);
     const good = parts.filter(isEmail).map((x) => x.toLowerCase());
@@ -173,23 +176,23 @@ function Composer({ initial, from, onClose, onSent }: { initial: Partial<MailMes
     try { await api.saveDraft({ id: initial.id, to: [...to, ...typed.split(/[\s,;]+/).filter(isEmail)], subject, body, from, ws: ws.id }); onClose(true); }
     catch (e) { toast((e as Error).message, "bad"); onClose(false); }
   };
-  return (
-    <div role="dialog" aria-label="New email" className={cx("fixed bottom-0 right-6 z-40 flex w-[min(640px,calc(100vw-24px))] flex-col rounded-t-2xl bg-white shadow-modal animate-fade-up", min ? "h-12" : "h-[min(520px,85vh)]")}>
-      <div className="flex h-12 shrink-0 items-center gap-1 border-b border-line px-4">
-        <span className="flex-1 font-medium">{subject || "New email"}</span>
-        <IconButton icon="chev-down" label={min ? "Expand" : "Minimise"} className={cx(min && "rotate-180")} onClick={() => setMin(!min)} />
+  return createPortal(
+    <div ref={root} role="dialog" aria-label="New email" className={cx("melo-app fixed inset-x-0 bottom-0 z-40 flex flex-col overflow-hidden rounded-t-2xl bg-white shadow-modal animate-rise transition-[height] duration-300 ease-[cubic-bezier(.22,1,.36,1)] sm:left-auto sm:right-6 sm:w-[min(640px,calc(100vw-48px))]", min ? "h-12" : "h-[min(520px,85dvh)]")}>
+      <div className="flex h-12 shrink-0 cursor-default items-center gap-1 border-b border-line px-4" onDoubleClick={() => setMin(!min)}>
+        <span className="min-w-0 flex-1 truncate font-medium">{subject || "New email"}</span>
+        <IconButton icon="chev-down" label={min ? "Expand" : "Minimise"} className={cx("duration-300", min && "rotate-180")} onClick={() => setMin(!min)} />
         <IconButton icon="x" label="Close and save draft" onClick={close} />
       </div>
       {!min && <>
         {!from && <div className="flex items-center gap-2 bg-warn-soft px-4 py-2 text-sm text-warn"><Icon name="mail" />Sending needs a @melo.to address. <Link to="/app/settings/profile" className="font-medium underline">Claim one</Link></div>}
         <div className="relative flex min-h-11 flex-wrap items-center gap-1.5 border-b border-line px-4 py-1.5 text-sm">
           <span className="w-14 text-ink-3">To</span>
-          {to.map((e) => <span key={e} className="flex h-7 items-center gap-1.5 rounded-full bg-hover pl-1 pr-2"><Avatar name={e} size={20} />{e}<button type="button" aria-label={`Remove ${e}`} onClick={() => setTo(to.filter((x) => x !== e))}><Icon name="x" className="size-3" /></button></span>)}
+          {to.map((e) => <span key={e} className="flex h-7 items-center gap-1.5 rounded-full bg-hover pl-1 pr-2 animate-pop"><Avatar name={e} size={20} />{e}<button type="button" aria-label={`Remove ${e}`} onClick={() => setTo(to.filter((x) => x !== e))}><Icon name="x" className="size-3" /></button></span>)}
           <input aria-label="To" value={typed} onChange={(e) => setTyped((e.target as HTMLInputElement).value)} onBlur={commit} autoFocus={!to.length}
             onKeyDown={(e) => { if ([",", "Enter", " ", "Tab"].includes(e.key) && typed.trim()) { e.preventDefault(); commit(); } if (e.key === "Backspace" && !typed && to.length) setTo(to.slice(0, -1)); }}
             className="h-7 min-w-[160px] flex-1 bg-transparent outline-none" placeholder={to.length ? "" : "name@company.com"} />
           {!!suggestions.length && (
-            <div className="absolute left-16 top-full z-10 mt-1 w-72 rounded-2xl bg-white p-1.5 shadow-pop">
+            <div className="absolute left-16 top-full z-10 mt-1 w-72 rounded-2xl bg-white p-1.5 shadow-pop animate-pop">
               {suggestions.map((p) => <button key={p.user_id} type="button" onMouseDown={(e) => { e.preventDefault(); setTo([...to, p.email]); setTyped(""); }} className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left text-sm hover:bg-hover"><Avatar name={p.name || p.email} id={p.user_id} size={24} /><span className="min-w-0"><b className="block truncate font-medium">{p.name || p.email}</b><span className="block truncate text-xs text-ink-3">{p.email}</span></span></button>)}
             </div>
           )}
@@ -205,6 +208,5 @@ function Composer({ initial, from, onClose, onSent }: { initial: Partial<MailMes
           <IconButton icon="trash" label="Discard" onClick={async () => { if (initial.id) await api.deleteMail(initial.id).catch(() => {}); onClose(false); }} />
         </div>
       </>}
-    </div>
-  );
+    </div>, document.body);
 }

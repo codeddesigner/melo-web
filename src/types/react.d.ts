@@ -41,6 +41,10 @@ declare module "react" {
 declare module "react/jsx-runtime" {
   export const jsx: unknown; export const jsxs: unknown; export const Fragment: unknown;
 }
+declare module "react-dom" {
+  import type { ReactNode } from "react";
+  export function createPortal(children: ReactNode, container: Element): ReactNode;
+}
 declare module "react-dom/client" {
   import type { ReactNode } from "react";
   export function createRoot(el: Element): { render(node: ReactNode): void; unmount(): void };

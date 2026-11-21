@@ -14,7 +14,8 @@ function Routes() {
   const top = parts[0] ?? "";
   const isApp = top === "app";
   useEffect(() => { document.body.style.background = isApp ? "#f7f7f7" : ""; }, [isApp]);
-  if (top === "index") { navigate("/", { replace: true }); return null; }
+  useEffect(() => { if (top === "index") navigate("/", { replace: true }); }, [top]);
+  if (top === "index") return null;
   const page = top === "" ? <Home /> : top === "signin" ? <SignIn /> : top === "signup" ? <SignUp /> : isApp ? <AppRoot /> : <NotFound />;
   return <Suspense fallback={<div className="min-h-screen" />}>{page}</Suspense>;
 }

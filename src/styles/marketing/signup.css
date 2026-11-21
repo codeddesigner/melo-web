@@ -231,3 +231,12 @@ body.su { background: var(--bg-surface); color: var(--text-primary); font-family
   .su-li { height: auto; min-height: 46px; padding: 10px 14px 10px 10px; border-radius: 16px; }
   .su-li span { white-space: normal; }
 }
+
+/* Soft step changes in sign-in / sign-up: each step eases in, errors fade in instead of popping */
+.su-content { animation: suStep .42s cubic-bezier(.22,1,.36,1) both; }
+@keyframes suStep { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.su-err:not(:empty) { animation: suErr .28s cubic-bezier(.22,1,.36,1) both; }
+@keyframes suErr { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.su-btn:active:not(:disabled), .su-alt:active, .su-opt:active { transform: scale(.985); }
+.su-btn, .su-alt, .su-opt { transition-property: background, color, border-color, box-shadow, transform, opacity; transition-duration: .18s; transition-timing-function: cubic-bezier(.22,1,.36,1); }
+@media (prefers-reduced-motion: reduce) { .su-content, .su-err:not(:empty), .su-stage { animation: none; } }

@@ -40,10 +40,30 @@
   --color-tag-pink: #a3336b;
   --shadow-pop: 0 0 0 1px rgba(0,0,0,.06), 0 12px 32px -8px rgba(0,0,0,.18);
   --shadow-modal: 0 0 0 1px rgba(0,0,0,.06), 0 24px 48px -12px rgba(0,0,0,.24);
-  --animate-fade-up: fade-up .28s cubic-bezier(.22,1,.36,1) both;
-  --animate-pop: pop .2s cubic-bezier(.34,1.56,.64,1) both;
+  /* Motion: one soft ease-out curve everywhere, short exits, no overshoot */
+  --ease-soft: cubic-bezier(.22,1,.36,1);
+  --animate-fade-up: fade-up .32s var(--ease-soft) both;
+  --animate-fade-in: fade-in .22s var(--ease-soft) both;
+  --animate-fade-out: fade-out .16s ease-in both;
+  --animate-pop: pop .24s var(--ease-soft) both;
+  --animate-pop-out: pop-out .16s ease-in both;
+  --animate-sink: sink .18s ease-in both;
+  --animate-sheet-in: sheet-in .3s var(--ease-soft) both;
+  --animate-sheet-out: sheet-out .2s ease-in both;
+  --animate-rise: rise .3s var(--ease-soft) both;
+  --animate-rise-out: rise-out .2s ease-in both;
+  --animate-tick: tick .3s var(--ease-soft) both;
   @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  @keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes pop-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(2px) scale(.98); } }
+  @keyframes sink { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(8px); } }
+  @keyframes sheet-in { from { transform: translateX(-100%); } to { transform: none; } }
+  @keyframes sheet-out { from { transform: none; } to { transform: translateX(-100%); } }
+  @keyframes rise { from { opacity: .6; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  @keyframes rise-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(24px); } }
+  @keyframes tick { 0% { transform: scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
 }
 
 /* Base for the app (scoped so it never touches the marketing pages) */
@@ -61,4 +81,21 @@
   .melo-app :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 6px; }
   .melo-app ::placeholder { color: var(--color-ink-3); opacity: 1; }
   .melo-scroll { scrollbar-width: thin; scrollbar-color: #d6d6d6 transparent; }
+  /* Every control eases between states instead of snapping */
+  .melo-app :where(a, button, [role="switch"], [role="menuitem"], input, textarea, select, label) {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: .18s;
+    transition-timing-function: var(--ease-soft);
+  }
+  .melo-app :where(button:not(:disabled), a, [role="menuitem"]):active { transition-duration: .08s; }
+  .melo-app :focus-visible { transition: outline-offset .15s var(--ease-soft); }
+  .melo-app ::selection { background: rgba(27,135,245,.18); }
+}
+
+/* Respect "reduce motion": keep state changes, drop movement */
+@media (prefers-reduced-motion: reduce) {
+  .melo-app *, .melo-app *::before, .melo-app *::after {
+    animation-duration: 1ms !important; animation-delay: 0ms !important;
+    transition-duration: 1ms !important; scroll-behavior: auto !important;
+  }
 }

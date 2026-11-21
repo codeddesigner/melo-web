@@ -97,7 +97,11 @@ function Conversation({ channel, title, nameOf, me }: { channel: Channel; title:
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLTextAreaElement>(null);
   const atBottom = useRef(true);
+  const firstPaint = useRef(true);
+  const known = useRef<Set<string> | null>(null);
+  const [leaving, setLeaving] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let live = true, last = "";
@@ -113,18 +117,37 @@ function Conversation({ channel, title, nameOf, me }: { channel: Channel; title:
     load(true); const t = setInterval(() => load(false), 3000);
     return () => { live = false; clearInterval(t); };
   }, [channel.id]);
-  useEffect(() => { const el = scroller.current; if (el && atBottom.current) el.scrollTop = el.scrollHeight; }, [msgs]);
+  /* First load jumps straight to the latest message; after that, new messages glide into view */
+  useEffect(() => {
+    const el = scroller.current; if (!el || !msgs) return;
+    if (!known.current) known.current = new Set(msgs.map((m) => m.id));
+    if (!atBottom.current) return;
+    if (firstPaint.current) { el.scrollTop = el.scrollHeight; firstPaint.current = false; }
+    else el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [msgs]);
+  /* The message box grows with what you type (up to a limit) */
+  useEffect(() => { const el = box.current; if (!el) return; el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 160)}px`; }, [text]);
 
   const send = async () => {
     const body = text.trim(); if (!body || sending) return;
     setSending(true); setText("");
     const temp: Message = { id: "tmp-" + Date.now(), channel_id: channel.id, workspace_id: ws.id, user_id: me, body, created_at: new Date().toISOString() };
     setMsgs((m) => [...(m ?? []), temp]); atBottom.current = true;
-    try { const saved = await api.postMessage(ws.id, channel.id, body); setMsgs((m) => (m ?? []).map((x) => (x.id === temp.id ? saved : x))); markSeen(channel.id, saved.created_at); }
+    try {
+      const saved = await api.postMessage(ws.id, channel.id, body);
+      known.current?.add(saved.id);
+      /* The 3s poll may have already brought this message in — never show it twice */
+      setMsgs((m) => (m ?? []).filter((x) => x.id !== saved.id).map((x) => (x.id === temp.id ? saved : x)));
+      markSeen(channel.id, saved.created_at);
+    }
     catch (e) { setMsgs((m) => (m ?? []).filter((x) => x.id !== temp.id)); setText(body); toast((e as Error).message, "bad"); }
     finally { setSending(false); }
   };
-  const del = async (id: string) => { try { await api.deleteMessage(id); setMsgs((m) => (m ?? []).filter((x) => x.id !== id)); } catch (e) { toast((e as Error).message, "bad"); } };
+  const del = async (id: string) => {
+    setLeaving((s) => new Set(s).add(id));
+    try { await api.deleteMessage(id); setTimeout(() => setMsgs((m) => (m ?? []).filter((x) => x.id !== id)), 180); }
+    catch (e) { setLeaving((s) => { const n = new Set(s); n.delete(id); return n; }); toast((e as Error).message, "bad"); }
+  };
 
   const groups = useMemo(() => {
     const out: { day: string; items: (Message & { cont: boolean })[] }[] = [];
@@ -142,7 +165,7 @@ function Conversation({ channel, title, nameOf, me }: { channel: Channel; title:
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-6">
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-4 md:px-6">
         <div className="min-w-0 flex-1">
           <h2 className="flex items-center gap-1.5 text-[16px] font-medium">{!channel.dm_users && <Icon name="hash" className="size-4" />}{channel.dm_users ? title : channel.name}</h2>
           {channel.topic && <p className="truncate text-[13px] text-ink-3">{channel.topic}</p>}
@@ -159,14 +182,15 @@ function Conversation({ channel, title, nameOf, me }: { channel: Channel; title:
           <div key={g.day}>
             <div className="my-3 flex items-center gap-3 text-xs text-ink-3"><span className="h-px flex-1 bg-line" />{g.day}<span className="h-px flex-1 bg-line" /></div>
             {g.items.map((m) => (
-              <div key={m.id} className={cx("group relative flex gap-3 rounded-xl px-2 transition-colors hover:bg-subtle", m.cont ? "py-0.5" : "mt-2 py-1.5", m.id.startsWith("tmp-") && "opacity-60")}>
-                {m.cont ? <span className="w-9 shrink-0 pt-0.5 text-right text-[10px] text-transparent group-hover:text-ink-3">{fmtTime(m.created_at)}</span> : <Avatar name={nameOf(m.user_id)} id={m.user_id} size={36} />}
+              <div key={m.id} className={cx("group relative flex gap-3 rounded-xl px-2 hover:bg-subtle", m.cont ? "py-0.5" : "mt-2 py-1.5",
+                m.id.startsWith("tmp-") && "opacity-70", leaving.has(m.id) ? "animate-pop-out" : known.current && !known.current.has(m.id) && "animate-fade-up")}>
+                {m.cont ? <span className="w-9 shrink-0 pt-0.5 text-right text-[10px] text-transparent transition-colors group-hover:text-ink-3">{fmtTime(m.created_at)}</span> : <Avatar name={nameOf(m.user_id)} id={m.user_id} size={36} />}
                 <div className="min-w-0 flex-1">
                   {!m.cont && <p className="flex items-baseline gap-2"><span className="font-medium">{nameOf(m.user_id)}</span><span className="text-xs text-ink-3">{fmtTime(m.created_at)}</span></p>}
                   <p className="whitespace-pre-wrap break-words text-[14.5px] leading-[22px]">{highlight(m.body)}</p>
                 </div>
                 {m.user_id === me && !m.id.startsWith("tmp-") && (
-                  <button type="button" aria-label="Delete message" onClick={() => del(m.id)} className="absolute top-1 right-2 hidden size-7 items-center justify-center rounded-lg bg-white text-icon-2 shadow-pop hover:text-bad group-hover:flex"><Icon name="trash" className="size-3.5" /></button>
+                  <button type="button" aria-label="Delete message" onClick={() => del(m.id)} className="absolute top-1 right-2 flex size-7 items-center justify-center rounded-lg bg-white text-icon-2 opacity-0 shadow-pop hover:text-bad focus:opacity-100 group-hover:opacity-100 active:scale-90"><Icon name="trash" className="size-3.5" /></button>
                 )}
               </div>
             ))}
@@ -175,12 +199,12 @@ function Conversation({ channel, title, nameOf, me }: { channel: Channel; title:
       </div>
       <form className="px-4 pb-4" onSubmit={(e) => { e.preventDefault(); send(); }}>
         <div className="rounded-2xl border border-line bg-white px-3.5 pt-3 pb-2 transition focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(27,135,245,.12)]">
-          <textarea aria-label={`Message ${title}`} rows={1} value={text} placeholder={`Message ${title}`} onChange={(e) => setText((e.target as HTMLTextAreaElement).value)}
+          <textarea ref={box} aria-label={`Message ${title}`} rows={1} value={text} placeholder={`Message ${title}`} onChange={(e) => setText((e.target as HTMLTextAreaElement).value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
             className="max-h-40 min-h-[24px] w-full resize-none bg-transparent text-[14.5px] outline-none" />
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-ink-3">Enter to send · Shift + Enter for a new line</span>
-            <button type="submit" aria-label="Send" disabled={!text.trim() || sending} className="flex size-8 items-center justify-center rounded-lg bg-inverse text-white transition disabled:bg-line-2"><Icon name="send" /></button>
+            <span className="hidden text-xs text-ink-3 sm:inline">Enter to send · Shift + Enter for a new line</span><span className="sm:hidden" />
+            <button type="submit" aria-label="Send" disabled={!text.trim() || sending} className="flex size-8 items-center justify-center rounded-lg bg-inverse text-white active:scale-90 disabled:bg-line-2"><Icon name="send" /></button>
           </div>
         </div>
       </form>

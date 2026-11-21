@@ -3,7 +3,7 @@ import { api, auth, type Invite, type Overview, type Role } from "../../lib/api"
 import { navigate, useLocation } from "../../lib/router";
 import { ago, copy, cx, isEmail, slugUser } from "../../lib/util";
 import { Icon, type IconName } from "../../components/icons";
-import { Avatar, Button, Empty, Field, IconButton, Input, Menu, Modal, Select, Skeleton, Tag, TextArea, Toggle, useAsync, useToast } from "../../components/ui";
+import { Avatar, Button, Empty, Field, IconButton, Input, Menu, Modal, Select, Skeleton, Tag, TextArea, Toggle, useAsync, useConfirm, useToast } from "../../components/ui";
 import { useApp } from "../context";
 import { Panel, SideItem, SideLabel, SideNav } from "../AppRoot";
 
@@ -31,7 +31,6 @@ export default function Settings() {
         {item("billing", "bolt", "Billing")}
       </SideNav>
       <Panel>
-        <MobileTabs page={page} />
         <div className="melo-scroll flex-1 overflow-y-auto">
           {page === "profile" && <ProfilePage />}
           {page === "notifications" && <NotificationsPage />}
@@ -46,13 +45,6 @@ export default function Settings() {
   );
 }
 
-function MobileTabs({ page }: { page: Page | null }) {
-  return (
-    <div className="flex gap-1 overflow-x-auto border-b border-line px-3 py-2 md:hidden">
-      {PAGES.map((p) => <button key={p} type="button" onClick={() => navigate(`/app/settings/${p}`)} className={cx("h-8 shrink-0 rounded-full px-3 text-sm capitalize", p === page ? "bg-inverse text-white" : "bg-hover")}>{p === "rules" ? "Rules" : p}</button>)}
-    </div>
-  );
-}
 function Header({ title, sub, action }: { title: string; sub?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 px-6 pt-8 pb-6 md:px-10">
@@ -211,7 +203,7 @@ function GeneralPage({ ov, reload, isAdmin }: { ov?: Overview; reload: () => voi
       <Body>
         <Card className="grid gap-5 p-6 md:grid-cols-2">
           <Field label="Workspace name"><Input value={name} onChange={setName} disabled={!isAdmin} /></Field>
-          <Field label="Workspace URL" hint="Your web address can’t be changed yet."><Input value={`melo.app/${ov.workspace.slug}`} onChange={() => {}} disabled /></Field>
+          <Field label="Workspace URL" hint="Your web address can’t be changed yet."><Input value={`melo.to/${ov.workspace.slug}`} onChange={() => {}} disabled /></Field>
           <Field label="Team size"><Input value={ov.workspace.team_size ?? "—"} onChange={() => {}} disabled /></Field>
           <Field label="Created"><Input value={new Date(ov.workspace.created_at).toLocaleDateString("en-US", { dateStyle: "long" })} onChange={() => {}} disabled /></Field>
           {isAdmin && <div className="md:col-span-2 flex justify-end"><Button onClick={save} busy={busy} disabled={!name.trim() || name === ov.workspace.name}>Save</Button></div>}
@@ -241,6 +233,7 @@ function MembersPage({ ov, loading, error, reload }: { ov?: Overview; loading: b
   const shown = rows.filter((r) => (filter === "all" || (filter === "admins" ? r.role === "admin" || r.role === "owner" : filter === "invited" ? r.kind === "invite" : r.role === "guest"))
     && (!q || `${r.name} ${r.email}`.toLowerCase().includes(q.toLowerCase())));
   const counts = { all: rows.length, admins: rows.filter((r) => r.role === "admin" || r.role === "owner").length, invited: ov.invites.length, guests: rows.filter((r) => r.role === "guest").length };
+  const confirm = useConfirm();
   const act = async (fn: () => Promise<unknown>, done: string) => { try { await fn(); toast(done); reload(); reloadPeople(); } catch (e) { toast((e as Error).message, "bad"); } };
   const selected = ov.members.find((m) => m.user_id === sel);
   return (
@@ -279,7 +272,7 @@ function MembersPage({ ov, loading, error, reload }: { ov?: Overview; loading: b
                 <div onClick={(e) => e.stopPropagation()}>
                   {isAdmin && r.role !== "owner" && r.id !== me && (
                     <Menu trigger={(open) => <IconButton icon="more" label={`More for ${r.name}`} onClick={open} />} items={r.kind === "member" ? [
-                      { label: "Remove from workspace", icon: "trash", danger: true, onSelect: () => { if (confirmed(`Remove ${r.name} from ${ov.workspace.name}?`)) act(() => api.removeMember(ov.workspace.id, r.id), `${r.name} removed`); } },
+                      { label: "Remove from workspace", icon: "trash", danger: true, onSelect: async () => { if (await confirm({ title: `Remove ${r.name}?`, body: `They’ll lose access to ${ov.workspace.name} right away. You can invite them again later.`, confirm: "Remove", danger: true })) act(() => api.removeMember(ov.workspace.id, r.id), `${r.name} removed`); } },
                     ] : [
                       { label: r.i.sent_at ? "Resend invite" : "Send invite", icon: "send", onSelect: () => act(() => api.invite(ov.workspace.id, [r.email], r.role).then(() => api.sendInvites(ov.workspace.id)), `Invite sent to ${r.email}`) },
                       { label: "Copy invite link", icon: "link", onSelect: () => copy(`${location.origin}/signup?join=${r.id}`).then(() => toast("Invite link copied")) },
@@ -299,7 +292,6 @@ function MembersPage({ ov, loading, error, reload }: { ov?: Overview; loading: b
     </div>
   );
 }
-const confirmed = (msg: string) => window.confirm(msg);
 function MemberPanel({ m, ov, onClose }: { m: Overview["members"][number]; ov: Overview; onClose: () => void }) {
   const name = m.full_name || m.email.split("@")[0];
   const RULE_NAMES: Record<string, string> = { digests: "Hide marketing digests", random: "Mute #random", invites: "Outside invites to Later" };

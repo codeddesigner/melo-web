@@ -188,7 +188,7 @@ function WorkspaceStep(p: P) {
     if (!slug) { setCheck({ slug, ok: null, msg: "" }); return; }
     if (slug.length < 3) { setCheck({ slug, ok: false, msg: "Use at least 3 characters." }); return; }
     setCheck({ slug, ok: null, msg: "Checking…" });
-    const t = setTimeout(() => api.slugAvailable(slug).then((ok) => setCheck({ slug, ok, msg: ok ? <><Icon name="check" className="icon" />melo.app/{slug} is available</> : `melo.app/${slug} is taken — try another.` }), (e: Error) => setCheck({ slug, ok: false, msg: e.message })), 300);
+    const t = setTimeout(() => api.slugAvailable(slug).then((ok) => setCheck({ slug, ok, msg: ok ? <><Icon name="check" className="icon" />melo.to/{slug} is available</> : `melo.to/${slug} is taken — try another.` }), (e: Error) => setCheck({ slug, ok: false, msg: e.message })), 300);
     return () => clearTimeout(t);
   }, [slug, s.join]);
   const pv = { grad: "teal" as Grad, preview: <><div className="pv-card pv-side"><div className="pv-ws"><span className="m"><Mark /></span><em>{s.ws || "Acme Studio"}</em><Icon name="chev-down" className="icon" /></div>
@@ -220,7 +220,7 @@ function WorkspaceStep(p: P) {
     <Title h="Create your workspace" p="This is where your team’s email, channels and rules live." />
     <form className="su-content" style={{ width: "100%", gap: 20 }} noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <In id="su-ws" label="Workspace name" placeholder="Acme Studio" value={s.ws} autoFocus onChange={(v) => { up({ ws: v, ...(touched ? {} : { slug: slugWs(v) }) }); setErr(""); }} />
-      <div className="su-f"><label htmlFor="su-url">Workspace URL</label><div className="su-in"><span className="fix">melo.app/</span><input id="su-url" spellCheck={false} autoCapitalize="off" placeholder="acme-studio" value={s.slug} onChange={(e) => { up({ slug: (e.target as HTMLInputElement).value }); setTouched(true); }} /></div>
+      <div className="su-f"><label htmlFor="su-url">Workspace URL</label><div className="su-in"><span className="fix">melo.to/</span><input id="su-url" spellCheck={false} autoCapitalize="off" placeholder="acme-studio" value={s.slug} onChange={(e) => { up({ slug: (e.target as HTMLInputElement).value }); setTouched(true); }} /></div>
         <p className={`su-ok${check.ok === false ? " bad" : ""}`}>{check.msg}</p></div>
       <div className="su-f"><span className="su-lab">Email domain</span><div className="su-pills" role="group" aria-label="Email domain">
         <button type="button" className="su-pill" aria-pressed={mode === "domain"} onClick={() => up({ domainMode: "domain", domain: s.domain || d })}>{d ? `Use ${d}` : "I have a domain"}</button>

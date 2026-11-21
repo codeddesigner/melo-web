@@ -45,9 +45,9 @@ export default function Calendar() {
         <MiniMonth value={anchor} onPick={setAnchor} />
         <SideLabel>My calendars</SideLabel>
         {Object.entries(COLORS).map(([k, c]) => (
-          <label key={k} className="flex h-8 cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-sm hover:bg-hover">
+          <label key={k} className="flex h-8 shrink-0 cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-sm hover:bg-hover">
             <input type="checkbox" checked={!hidden[k]} onChange={() => setHidden((h) => ({ ...h, [k]: !h[k] }))} className="sr-only" />
-            <span className="flex size-4 items-center justify-center rounded border-2" style={{ borderColor: c.bar, background: hidden[k] ? "transparent" : c.bar }}>{!hidden[k] && <Icon name="check" className="size-3 text-white" />}</span>
+            <span className="flex size-4 items-center justify-center rounded border-2 transition-colors" style={{ borderColor: c.bar, background: hidden[k] ? "transparent" : c.bar }}>{!hidden[k] && <Icon name="check" className="size-3 text-white" />}</span>
             {k === "blue" ? `Work · ${account.email}` : c.label}
           </label>
         ))}
@@ -55,17 +55,17 @@ export default function Calendar() {
         <p className="px-2.5 text-xs text-ink-3">Booking pages on yourcompany.melo.to are coming soon.</p>
       </SideNav>
       <Panel>
-        <header className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
-          <h2 className="mr-2 text-[18px] font-medium">{title}</h2>
+        <header className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-3 md:px-5">
+          <h2 key={title} className="mr-2 text-[18px] font-medium animate-fade-in">{title}</h2>
           <Button variant="soft" size="s" onClick={() => setAnchor(new Date())}>Today</Button>
           <IconButton icon="chev-left" label="Previous" onClick={() => step(-1)} />
           <IconButton icon="chev-right" label="Next" onClick={() => step(1)} />
           <span className="flex-1" />
           <div className="flex rounded-full bg-hover p-0.5">
-            {(["day", "week"] as const).map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cx("h-7 rounded-full px-3 text-sm capitalize", mode === m ? "bg-white font-medium shadow-sm" : "text-ink-2")}>{m}</button>)}
+            {(["day", "week"] as const).map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cx("h-7 rounded-full px-3 text-sm capitalize", mode === m ? "bg-white font-medium shadow-sm" : "text-ink-2 hover:text-ink")}>{m}</button>)}
           </div>
         </header>
-        <div className="grid border-b border-line" style={{ gridTemplateColumns: `56px repeat(${days.length}, minmax(0,1fr))` }}>
+        <div key={from.getTime()} className="grid border-b border-line animate-fade-in" style={{ gridTemplateColumns: `56px repeat(${days.length}, minmax(0,1fr))` }}>
           <span />
           {days.map((d) => (
             <div key={d.toISOString()} className="flex items-center gap-2 border-l border-line px-2.5 py-2.5 text-sm">
@@ -85,11 +85,15 @@ export default function Calendar() {
                   {Array.from({ length: END - START }, (_, i) => <span key={i} className="pointer-events-none absolute inset-x-0 border-t border-line" style={{ top: i * HOUR }} />)}
                   {dayEvents.map((e) => {
                     const s = new Date(e.starts_at), en = new Date(e.ends_at);
-                    const top = ((s.getHours() + s.getMinutes() / 60) - START) * HOUR, h = Math.max(22, ((en.getTime() - s.getTime()) / 3_600_000) * HOUR - 3);
+                    /* Keep events that start before 7am or run past 9pm inside the visible grid */
+                    const max = (END - START) * HOUR;
+                    const rawTop = ((s.getHours() + s.getMinutes() / 60) - START) * HOUR;
+                    const rawEnd = sameDay(s, en) ? ((en.getHours() + en.getMinutes() / 60) - START) * HOUR : max;
+                    const top = Math.min(Math.max(0, rawTop), max - 22), h = Math.max(22, Math.min(rawEnd, max) - top - 3);
                     const c = COLORS[e.color] ?? COLORS.blue;
                     return (
-                      <button key={e.id} type="button" onClick={() => setOpen(e)} className="absolute inset-x-1 overflow-hidden rounded-lg px-2 py-1 text-left transition hover:brightness-95 animate-pop"
-                        style={{ top: Math.max(0, top) + 1, height: h, background: c.bg, boxShadow: `inset 3px 0 0 ${c.bar}` }}>
+                      <button key={e.id} type="button" onClick={() => setOpen(e)} className="absolute inset-x-1 overflow-hidden rounded-lg px-2 py-1 text-left hover:brightness-95 active:scale-[.98] animate-pop"
+                        style={{ top: top + 1, height: h, background: c.bg, boxShadow: `inset 3px 0 0 ${c.bar}` }}>
                         <p className="truncate text-[13px] font-medium leading-4">{e.title}</p>
                         {h > 34 && <p className="truncate text-[11px] text-ink-2">{fmtTime(s)}{e.location ? ` · ${e.location}` : ""}</p>}
                       </button>
@@ -103,7 +107,7 @@ export default function Calendar() {
             })}
           </div>
         </div>
-        <p className="border-t border-line px-5 py-2 text-xs text-ink-3">Double-click the grid to add an event. Events are shared with everyone in {ws.name}.</p>
+        <p className="hidden border-t border-line px-5 py-2 text-xs text-ink-3 md:block">Double-click the grid to add an event. Events are shared with everyone in {ws.name}.</p>
       </Panel>
       {draft && <EventModal start={draft.start} onClose={() => setDraft(null)} onSaved={(e) => { ev.set((d) => [...(d ?? []), e]); setDraft(null); toast("Event added"); }} />}
       {open && (
