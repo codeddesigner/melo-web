@@ -84,7 +84,7 @@ export default function PersonalOnboarding() {
         <footer className="text-[12px] text-ink-3">© 2026 Melo · <button type="button" onClick={() => soon("The privacy page")} className="hover:text-ink">Privacy</button> · <button type="button" onClick={() => soon("The terms page")} className="hover:text-ink">Terms</button></footer>
       </div>
       <aside className="hidden p-4 lg:block">
-        <div key={step} className="flex h-full min-h-[600px] items-center justify-center rounded-[28px] p-10 transition-[background] duration-500 animate-fade-in" style={{ background: panel.bg }}>
+        <div key={step} className="glow-bg glow-soft flex h-full min-h-[600px] items-center justify-center rounded-[28px] p-10 transition-[background] duration-500 animate-fade-in" style={{ background: panel.bg }}>
           <div className="flex w-full max-w-[560px] flex-col gap-4">{panel.render(s)}<Caption h={panel.h} p={typeof panel.p === "function" ? panel.p(s) : panel.p} /></div>
         </div>
       </aside>

@@ -113,3 +113,18 @@
 .dn-copy:hover { background: var(--bg-hover); }
 .dn-copy.done { color: #2ea44f; }
 .dn-copy .icon { width: 16px; height: 16px; }
+
+/* Gradient backgrounds breathe: two soft glows drift slowly over the base gradient (hero on both sites, sign-up previews) */
+.glow-bg { position: relative; isolation: isolate; }
+.glow-bg::before, .glow-bg::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; will-change: transform; }
+.glow-bg::before { width: 70vw; height: 70vw; max-width: 1100px; max-height: 1100px; left: -18vw; top: 8%; background: radial-gradient(closest-side, var(--glow-a), transparent); animation: glow-a 22s ease-in-out infinite alternate; }
+.glow-bg::after { width: 60vw; height: 60vw; max-width: 960px; max-height: 960px; right: -16vw; top: 22%; background: radial-gradient(closest-side, var(--glow-b), transparent); animation: glow-b 26s ease-in-out infinite alternate; }
+.hero.glow-bg { --glow-a: rgba(150, 205, 255, .75); --glow-b: rgba(12, 98, 220, .5); }
+.hero.glow-bg > * { position: relative; }
+.glow-personal { --glow-a: rgba(255, 250, 220, .9); --glow-b: rgba(232, 204, 84, .6); }
+.glow-soft { overflow: hidden; --glow-a: rgba(255, 255, 255, .35); --glow-b: rgba(255, 255, 255, .22); }
+.glow-soft::before { width: 90%; height: 70%; left: -20%; top: -10%; }
+.glow-soft::after { width: 80%; height: 60%; right: -20%; top: 30%; }
+@keyframes glow-a { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(14vw, 6vh, 0) scale(1.12); } 100% { transform: translate3d(6vw, -4vh, 0) scale(.96); } }
+@keyframes glow-b { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-12vw, -5vh, 0) scale(1.1); } 100% { transform: translate3d(-4vw, 7vh, 0) scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .glow-bg::before, .glow-bg::after { animation: none; } }

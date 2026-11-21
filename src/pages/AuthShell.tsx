@@ -28,7 +28,7 @@ export function AuthShell({ step, grad, preview, children, stepKey }: { step?: s
           <p className="su-foot">© 2026 Melo · <Link to="/faq">Help</Link></p>
         </main>
         <aside className="su-prev" aria-hidden="true">
-          <div className="su-grad" style={{ background: GRAD[grad] }} />
+          <div className="su-grad glow-bg glow-soft" style={{ background: GRAD[grad] }} />
           <Link to="/faq" className="su-help"><Icon name="comment" className="icon" />Questions? Chat with us</Link>
           <div className="su-stage" ref={stage}>{preview}</div>
         </aside>
