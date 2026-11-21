@@ -70,3 +70,4 @@
 
 /* Headings never leave a word on its own line */
 .hero h1, .feat-title, .h-display, .vs-title, .faq-title, h1, h2 { text-wrap: balance; }
+.hero h1.hero-title { max-width: 640px; margin-left: auto; margin-right: auto; }
