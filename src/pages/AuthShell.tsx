@@ -1,6 +1,7 @@
 /* Shared two-column layout for sign-in and onboarding (Figma: form on the left, gradient preview on the right). */
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "../lib/router";
+import { onPersonalHost } from "../lib/site";
 import { Icon, MeloMark } from "../components/icons";
 
 export const GRAD = {
@@ -20,7 +21,7 @@ export function AuthShell({ step, grad, preview, children, stepKey }: { step?: s
     <div className="su">
       <div className="su-shell">
         <main className="su-form">
-          <div className="su-head"><Link to="/" aria-label="Melo business home"><img src="/logo.svg" alt="Melo business" width={140} height={28} /></Link><span className="sp" /><span className="su-step" aria-live="polite">{step}</span></div>
+          <div className="su-head">{onPersonalHost() ? <Link to="/" aria-label="Melo home"><img src="/logo-mail.svg" alt="Melo Mail" width={110} height={24} /></Link> : <Link to="/" aria-label="Melo business home"><img src="/logo.svg" alt="Melo business" width={140} height={28} /></Link>}<span className="sp" /><span className="su-step" aria-live="polite">{step}</span></div>
           <div className="su-grow" />
           <div className="su-content" key={stepKey}>{children}</div>
           <div className="su-grow" />

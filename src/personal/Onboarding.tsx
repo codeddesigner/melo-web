@@ -138,7 +138,7 @@ function Start({ s, up, go, soon }: P) {
       <span className="flex-1"><b className="block text-[14px] font-semibold">No email? Create a @melo.to address</b><span className="text-[12px] text-ink-sec">Free forever. All you need is a password.</span></span>
       <Icon name="chev-right" className="size-4 text-pa-text transition-transform group-hover:translate-x-0.5" />
     </button>
-    <p className="text-[13px] text-ink-sec">Already have an account? <Link to="/signin" className="font-medium text-pa-text hover:underline">Log in</Link></p>
+    <p className="text-[13px] text-ink-sec">Already have an account? <Link to="/signin" className="font-medium text-pa-text hover:underline">Sign in</Link></p>
     <p className="text-[12px] text-ink-3">By continuing you agree to Melo’s Terms and Privacy Policy.</p>
   </>;
 }

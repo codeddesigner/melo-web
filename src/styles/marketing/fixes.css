@@ -70,7 +70,46 @@
 
 /* Headings never leave a word on its own line */
 .hero h1, .feat-title, .h-display, .vs-title, .faq-title, h1, h2 { text-wrap: balance; }
-.hero h1.hero-title { max-width: 640px; margin-left: auto; margin-right: auto; }
+.hero h1.hero-title { max-width: 820px; text-wrap: wrap; margin-left: auto; margin-right: auto; }
 
 /* Personal ⇄ Business switch: quick cross-fade, the switch itself stays in place */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .28s; }
+
+/* Book a demo dialog */
+.dlg { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(17, 17, 17, .45); backdrop-filter: blur(2px); animation: dlg-in .2s ease-out both; }
+.dlg-card { position: relative; width: 100%; max-width: 440px; max-height: calc(100dvh - 32px); overflow-y: auto; background: #fff; border-radius: 24px; box-shadow: 0 24px 64px -16px rgba(0,0,0,.35); animation: dlg-card .28s cubic-bezier(.22,1,.36,1) both; }
+.dlg-card .x { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 999px; color: var(--text-secondary); }
+.dlg-card .x:hover { background: var(--bg-hover); color: var(--text-primary); }
+.dlg-content { padding: 32px 28px 24px; }
+.dlg-content h3 { font-size: 24px; line-height: 30px; font-weight: 500; letter-spacing: -.01em; color: var(--text-primary); }
+.dlg-content > p, .dlg-content .ok p { margin-top: 6px; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
+.dlg-content form { display: flex; flex-direction: column; margin-top: 20px; }
+.dlg-content label { font-size: 13px; font-weight: 500; color: var(--text-primary); margin: 12px 0 6px; }
+.dlg-content label:first-child { margin-top: 0; }
+.dlg-content input { font: inherit; font-size: 15px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border-strong); font-size: 15px; outline: none; background: #fff; }
+.dlg-content input:focus { border-color: var(--accent-base); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dlg-content .err { min-height: 18px; margin-top: 8px; font-size: 13px; color: #e5484d; }
+.dlg-content form .btn { margin-top: 6px; width: 100%; height: 48px; justify-content: center; }
+.dlg-content .fine { margin-top: 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+.dlg-content .ok { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 0; }
+.dlg-content .ok i { width: 56px; height: 56px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #ddf3e4; color: #2ea44f; margin-bottom: 14px; }
+.dlg-content .ok .btn { margin-top: 18px; min-width: 140px; justify-content: center; }
+@keyframes dlg-in { from { opacity: 0; } }
+@keyframes dlg-card { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+
+/* Sign-up: DNS record card */
+.dn-list { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+.dn-rec { display: flex; align-items: flex-start; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 14px; border: 1px solid var(--border-default); background: var(--bg-subtle); }
+.dn-t { flex-shrink: 0; height: 22px; padding: 0 8px; border-radius: 6px; background: #fff; border: 1px solid var(--border-strong); font-size: 11px; font-weight: 600; line-height: 20px; color: var(--text-secondary); }
+.dn-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.dn-h { font-size: 12px; color: var(--text-tertiary); }
+.dn-b code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--text-primary); word-break: break-all; }
+.dn-b small { font-size: 12px; color: var(--text-tertiary); }
+.dn-st { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.dn-st .icon { width: 14px; height: 14px; }
+.dn-st.ok { background: #ddf3e4; color: #1f6b3a; }
+.dn-st.wait { background: #fde8d4; color: #9a4b0f; }
+.dn-copy { flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: var(--icon-primary); }
+.dn-copy:hover { background: var(--bg-hover); }
+.dn-copy.done { color: #2ea44f; }
+.dn-copy .icon { width: 16px; height: 16px; }

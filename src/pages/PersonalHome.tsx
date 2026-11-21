@@ -25,7 +25,7 @@ export default function PersonalHome() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f3e48f_0%,#f7eebb_38%,#fbf8e6_68%,#ffffff_100%)] px-4 pt-14 pb-16 text-center md:pt-[72px]">
-          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance lg:text-wrap animate-fade-up max-w-[640px] sm:text-[60px] lg:text-[76px]">Relatable email for the modern world.</h1>
+          <h1 className="mx-auto font-display text-[44px] leading-[1.04] font-medium tracking-[-0.02em] text-ink text-balance lg:text-wrap animate-fade-up max-w-[820px] sm:text-[60px] lg:text-[76px]">Relatable email for the modern world.</h1>
           <p className="mx-auto mt-6 max-w-[680px] text-[17px] leading-[1.45] text-ink-sec animate-fade-up [animation-delay:60ms] md:text-[19px]">Melo is a calm inbox for your personal email. Claim a free @melo.to address, or bring Gmail, Outlook and iCloud.</p>
           <div className="mx-auto mt-7 flex max-w-[360px] flex-col justify-center gap-3 animate-fade-up [animation-delay:120ms] sm:max-w-none sm:flex-row">
             <Link to={start} className={cx(BTN, "bg-inverse text-white hover:bg-[#333]")}>{startLabel}</Link>
@@ -266,7 +266,7 @@ function Faq() {
 
 function Footer({ soon }: { soon: (w: string) => void }) {
   const col = (title: string, links: [string, (() => void) | string][]) => (
-    <div className="flex w-[150px] flex-col gap-3 text-[13px] leading-[18px]"><b className="font-semibold">{title}</b>
+    <div className="flex min-w-0 flex-col gap-3 text-[13px] leading-[18px] md:w-[150px]"><b className="font-semibold">{title}</b>
       {links.map(([t, a]) => typeof a === "string" ? <a key={t} href={a} className="text-ink-sec hover:text-ink">{t}</a> : <button key={t} type="button" onClick={a} className="text-left text-ink-sec hover:text-ink">{t}</button>)}</div>
   );
   const top = () => window.scrollTo({ top: 0, behavior: "smooth" });
