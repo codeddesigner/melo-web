@@ -138,9 +138,14 @@ export default function PersonalHome() {
 function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: string; startLabel: string; soon: (w: string) => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const [mobile, setMobile] = useState(false);
+  const [mmOpen, setMmOpen] = useState<Record<string, boolean>>({ Product: true });
+  useEffect(() => { document.body.style.overflow = mobile ? "hidden" : ""; if (!mobile) return () => { document.body.style.overflow = ""; };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setMobile(false); }; window.addEventListener("keydown", key);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", key); }; }, [mobile]);
   useEffect(() => { const f = () => setScrolled(window.scrollY > 8); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
   useEffect(() => { if (!open) return; const c = (e: Event) => { if (!(e.target as HTMLElement).closest("[data-pmenu]")) setOpen(null); }; document.addEventListener("click", c); return () => document.removeEventListener("click", c); }, [open]);
-  const scrollTo = (id: string) => { setOpen(null); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const scrollTo = (id: string) => { setOpen(null); setMobile(false); requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })); };
   const menus: Record<string, [string, string, () => void][]> = {
     Product: [["Primary", "People you know, on top", () => scrollTo("product")], ["Screener", "First-time senders wait", () => scrollTo("product")], ["Later", "Snooze anything", () => scrollTo("product")], ["Summaries", "Long threads in one line", () => scrollTo("product")]],
     Features: [["Smart filters", "Newsletters, receipts, updates", () => scrollTo("features")], ["Your own address", "you@melo.to, free", () => navigate(start)], ["Privacy", "No ads, ever", () => scrollTo("features")]],
@@ -167,8 +172,31 @@ function Nav({ signedIn, start, startLabel, soon }: { signedIn: boolean; start: 
         <SiteToggle current="personal" className="hidden xl:grid" />
         {!signedIn && <Link to="/signin" className="hidden text-[14px] font-medium hover:underline md:block">Sign in</Link>}
         <Link to={start} className="btn btn-dark shrink-0">{startLabel}</Link>
+        <button type="button" aria-label="Open menu" aria-expanded={mobile} onClick={() => setMobile(true)} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-black/[.06] text-ink hover:bg-black/10 lg:hidden"><Icon name="menu" className="size-[18px]" /></button>
       </nav>
       <div className="flex justify-center pb-3 xl:hidden"><SiteToggle current="personal" /></div>
+      {/* Phone and tablet menu: same layout as the Business site's */}
+      <div className={cx("site-scope mobile-menu", mobile && "open")} role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="mm-head"><Link to={personalHome()} onClick={() => setMobile(false)} aria-label="Melo home"><img src="/logo-mail.svg" alt="Melo Mail" width={101} height={22} className="h-[22px] w-auto" /></Link>
+          <button type="button" className="mm-close" aria-label="Close menu" onClick={() => setMobile(false)}><Icon name="x" className="icon" /></button></div>
+        <div className="mm-list">
+          <SiteToggle current="personal" full className="mb-3" />
+          {([
+            ["Product", [["inbox", "Primary", "People you know, on top", () => scrollTo("product")], ["shield", "Screener", "First-time senders wait", () => scrollTo("product")], ["clock", "Later", "Snooze anything", () => scrollTo("product")], ["sparkle", "Summaries", "Long threads in one line", () => scrollTo("product")]]],
+            ["Features", [["filter", "Smart filters", "Newsletters, receipts, updates", () => scrollTo("features")], ["mail", "Your own address", "you@melo.to, free", () => { setMobile(false); navigate(start); }], ["lock", "Privacy", "No ads, ever", () => scrollTo("features")]]],
+            ["More", [["star", "Pricing", "Free forever, Plus if you want more", () => scrollTo("pricing")], ["doc", "FAQ", "Answers in a minute", () => scrollTo("faq")], ["grid", "Melo for Business", "Email, chat and work for teams", () => { setMobile(false); const h = businessHome(); if (h.startsWith("/")) navigate(h); else location.href = h; }]]],
+          ] as [string, [IconName, string, string, () => void][]][]).map(([sec, rows]) => (
+            <div key={sec} className={cx("mm-section", mmOpen[sec] && "open")}>
+              <button type="button" className="mm-trigger" aria-expanded={Boolean(mmOpen[sec])} onClick={() => setMmOpen((o) => ({ ...o, [sec]: !o[sec] }))}>{sec} <Icon name="chev-down" className="icon" /></button>
+              <div className="mm-panel">{rows.map(([ic, t, d, fn]) => <button type="button" key={t} className="mm-row w-full text-left" onClick={fn}><span className="mf-icon" style={{ background: "var(--color-pa-soft)" }}><Icon name={ic} className="icon" /></span><span><span className="mf-title">{t}</span><span className="mf-desc">{d}</span></span></button>)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mm-cta">
+          <Link className="btn btn-dark" to={start} onClick={() => setMobile(false)}>{startLabel}</Link>
+          {!signedIn && <Link className="btn btn-soft" to="/signin" onClick={() => setMobile(false)}>Sign in</Link>}
+        </div>
+      </div>
     </header>
   );
 }
