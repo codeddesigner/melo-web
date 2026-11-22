@@ -4,6 +4,7 @@ import type { WorkspaceSummary } from "../lib/api";
 import { navigate } from "../lib/router";
 import { cx } from "../lib/util";
 import { Icon, MeloMark } from "../components/icons";
+import { appLock, appUrl } from "../lib/site";
 import { useApp } from "./context";
 
 export function SpaceTile({ ws, size = 34 }: { ws: WorkspaceSummary; size?: number }) {
@@ -22,8 +23,9 @@ const spaceName = (w: WorkspaceSummary) => (w.kind === "personal" ? "Personal" :
 export function SpaceList({ compact, onPick }: { compact?: boolean; onPick?: () => void }) {
   const { account, ws, inboxes, switchWorkspace } = useApp();
   const addr = account.profile?.melo_address ? `${account.profile.melo_address}@melo.to` : null;
-  const spaces = [...account.workspaces].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "personal" ? -1 : 1));
-  const hasPersonal = spaces.some((w) => w.kind === "personal");
+  const lock = appLock();
+  const spaces = [...account.workspaces].filter((w) => !lock || w.kind === lock).sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "personal" ? -1 : 1));
+  const hasPersonal = account.workspaces.some((w) => w.kind === "personal");
   const sub = (w: WorkspaceSummary) => (w.kind === "personal" ? addr ?? "Personal mail" : w.domain ? `@${w.domain}` : "Business workspace");
   return (
     <div className="flex flex-col gap-0.5">
@@ -42,8 +44,16 @@ export function SpaceList({ compact, onPick }: { compact?: boolean; onPick?: () 
           </button>
         );
       })}
-      {!hasPersonal && (
-        <button type="button" onClick={() => { onPick?.(); navigate("/signup?start=personal"); }} className={cx("flex w-full items-center gap-2.5 rounded-xl px-2 text-left text-[13px] font-medium hover:bg-hover", compact ? "h-10" : "h-11")}>
+      {lock && (
+        /* The other Melo opens on its own site, signed in separately */
+        <a href={appUrl(lock === "personal" ? "business" : "personal")} onClick={onPick} className={cx("flex w-full items-center gap-2.5 rounded-xl px-2 text-left hover:bg-hover", compact ? "h-11" : "h-12")}>
+          <span className={cx("flex shrink-0 items-center justify-center rounded-lg", compact ? "size-[26px]" : "size-[30px]", lock === "personal" ? "bg-inverse text-white" : "bg-[#f1e289] text-[#2b2600]")}><MeloMark className="h-[10px] w-[15px]" /></span>
+          <span className="min-w-0 flex-1 leading-tight"><span className="block truncate text-[13px] font-medium">{lock === "personal" ? "Melo Business" : "Melo Personal"}</span><span className="block truncate text-[11px] text-ink-3">{lock === "personal" ? "business.melo.to" : "melo.to"}</span></span>
+          <Icon name="out" className="size-4 text-icon-2" />
+        </a>
+      )}
+      {!lock && !hasPersonal && (
+        <button type="button" onClick={() => { onPick?.(); navigate("/signup?start=personal"); /* only shown off the real domains */ }} className={cx("flex w-full items-center gap-2.5 rounded-xl px-2 text-left text-[13px] font-medium hover:bg-hover", compact ? "h-10" : "h-11")}>
           <span className="flex size-[26px] items-center justify-center rounded-lg border border-dashed border-line-2 text-icon"><Icon name="plus" className="size-3.5" /></span>
           Add personal mail
         </button>
@@ -64,7 +74,8 @@ export function SpaceSwitcher() {
     document.addEventListener("mousedown", close); window.addEventListener("keydown", key);
     return () => { document.removeEventListener("mousedown", close); window.removeEventListener("keydown", key); };
   }, [open]);
-  const elsewhere = account.workspaces.filter((w) => w.id !== ws.id).reduce((n, w) => n + (inboxes[w.id] ?? 0), 0);
+  const lock = appLock();
+  const elsewhere = account.workspaces.filter((w) => w.id !== ws.id && (!lock || w.kind === lock)).reduce((n, w) => n + (inboxes[w.id] ?? 0), 0);
   return (
     <div ref={ref} className="relative mb-4">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${spaceName(ws)} — switch space`} title={spaceName(ws)} className="relative block transition hover:scale-105">
@@ -73,10 +84,10 @@ export function SpaceSwitcher() {
       </button>
       {open && (
         <div role="dialog" aria-label="Switch space" className="absolute left-0 top-full z-50 mt-2 w-[290px] rounded-2xl bg-white p-2 shadow-pop animate-pop origin-top-left">
-          <p className="px-2 pt-1 pb-2 text-[11px] font-medium text-ink-3">Your spaces</p>
+          <p className="px-2 pt-1 pb-2 text-[11px] font-medium text-ink-3">{appLock() === "business" ? "Your workspaces" : "Your spaces"}</p>
           <SpaceList onPick={() => setOpen(false)} />
           <div className="my-1.5 h-px bg-line" />
-          <button type="button" onClick={() => { setOpen(false); navigate("/signup?resume=1"); }} className="flex h-9 w-full items-center gap-2.5 rounded-xl px-2.5 text-left text-[13px] hover:bg-hover"><Icon name="plus" className="size-4 text-icon" />Create a business workspace</button>
+          {lock !== "personal" && <button type="button" onClick={() => { setOpen(false); navigate("/signup?resume=1"); }} className="flex h-9 w-full items-center gap-2.5 rounded-xl px-2.5 text-left text-[13px] hover:bg-hover"><Icon name="plus" className="size-4 text-icon" />{lock ? "New workspace" : "Create a business workspace"}</button>}
           <button type="button" onClick={() => { setOpen(false); navigate("/"); }} className="flex h-9 w-full items-center gap-2.5 rounded-xl px-2.5 text-left text-[13px] hover:bg-hover"><Icon name="globe" className="size-4 text-icon" />Melo website</button>
         </div>
       )}

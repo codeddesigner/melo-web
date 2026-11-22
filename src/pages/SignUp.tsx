@@ -4,6 +4,7 @@
    then create a workspace (with or without a company domain) or join one from an invite. */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, auth, type MailProvider, type Role } from "../lib/api";
+import { personalSignup } from "../lib/site";
 import { Link, navigate, useLocation } from "../lib/router";
 import { useSession } from "../lib/session";
 import { colorFor, copy, initials, isEmail, slugUser, slugWs } from "../lib/util";
@@ -88,7 +89,7 @@ function SignupStep(p: P) {
     </form>
     <div className="su-or"><span>or</span></div>
     <button type="button" className="su-alt" onClick={() => { p.up({ path: "melo", personal: false }); p.go("claim"); }}><span className="ic"><Mark /></span><span><b>Create a free @melo.to address</b><small>No other email needed. Use it for your work, then add a company domain any time.</small></span><Icon name="chev-right" className="icon" /></button>
-    <p className="su-meta">Just want personal email? <Link className="su-a" to="/signup?start=personal">Get Melo Mail free</Link> · Already have an account? <Link className="su-a" to="/signin">Sign in</Link></p>
+    <p className="su-meta">Just want personal email? <Link className="su-a" to={personalSignup()}>Get Melo Mail free</Link> · Already have an account? <Link className="su-a" to="/signin">Sign in</Link></p>
     <p className="su-meta small">By continuing you agree to Melo’s Terms and Privacy Policy.</p>
   </></Frame>;
 }

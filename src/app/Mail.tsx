@@ -187,20 +187,22 @@ function MailList({ items, folder, openId, nameFor, onDraft, showCat }: { items:
           <div key={m.id}>
             {header && <p className="px-4 pt-4 pb-1.5 text-[13px] text-ink-2">{header}</p>}
             <button type="button" onClick={() => (folder === "drafts" ? onDraft(m) : navigate(`/app/mail/${folder}/${m.id}`))}
-              className={cx("relative grid w-full grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[10px] px-4 py-2.5 text-left text-[13px] animate-fade-up active:scale-[.995] @xl:h-11 @xl:grid-cols-[8px_150px_minmax(0,1fr)_auto] @xl:py-0", sel ? "bg-accent-soft" : "hover:bg-hover")}>
+              className={cx("relative grid w-full grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[10px] px-4 py-2.5 text-left text-[13px] animate-fade-up active:scale-[.995] @xl:h-11 @xl:grid-cols-[8px_150px_minmax(0,1fr)_auto] @xl:py-0", sel ? "bg-accent-soft" : "hover:bg-hover")}>
               {sel && <span className="absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-accent animate-fade-in" />}
               <span className="hidden size-1.5 rounded-full @xl:block" style={{ background: unread ? "var(--color-accent)" : "transparent" }} aria-label={unread ? "Unread" : undefined} />
-              <span className="@xl:hidden"><Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={28} /></span>
+              <span className="self-start pt-0.5 @xl:hidden"><Avatar name={inboxRow ? who : to} id={inboxRow ? m.from_addr : m.to_addrs[0]} size={32} /></span>
               <span className={cx("truncate text-ink @xl:block", unread ? "font-semibold" : "font-normal", "hidden")}>{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span>
               <span className="min-w-0">
                 <span className={cx("flex items-center gap-2 truncate @xl:hidden", unread ? "font-semibold" : "")}>{unread && <span className="size-1.5 shrink-0 rounded-full bg-accent" />}<span className="truncate">{folder === "drafts" && <span className="text-bad">Draft · </span>}{who}</span></span>
                 <span className="flex min-w-0 items-center gap-2">
                   {(showCat || (c !== "primary" && folder === "inbox")) && <span className="inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-full bg-subtle px-2 text-[12px] capitalize text-ink-2 shadow-[inset_0_0_0_1px_var(--color-line)]"><span className="size-1.5 rounded-full" style={{ background: CAT_DOT[c] ?? "#80868b" }} />{c === "receipts" ? "Receipt" : c}</span>}
-                  <span className={cx("shrink-0 truncate text-ink", unread && "font-semibold")} style={{ maxWidth: "60%" }}>{m.subject || "(no subject)"}</span>
-                  <span className="min-w-0 truncate text-ink-3">{m.body.replace(/\s+/g, " ").slice(0, 140)}</span>
+                  <span className={cx("min-w-0 truncate text-ink @xl:max-w-[60%] @xl:shrink-0", unread && "font-semibold")}>{m.subject || "(no subject)"}</span>
+                  <span className="hidden min-w-0 truncate text-ink-3 @xl:block">{m.body.replace(/\s+/g, " ").slice(0, 140)}</span>
                 </span>
+                {/* Narrow lists (phones): the preview gets its own line */}
+                <span className="block truncate text-ink-3 @xl:hidden">{m.body.replace(/\s+/g, " ").slice(0, 140)}</span>
               </span>
-              <span className={cx("text-[12px]", unread ? "font-medium text-ink" : "text-ink-3")}>{folder === "later" ? <span className="inline-flex items-center gap-1 text-pa-text"><Icon name="clock" className="size-3" />{fmtTime(m.snoozed_until!)}</span> : fmtShort(m.created_at)}</span>
+              <span className={cx("self-start pt-0.5 text-[12px] @xl:self-auto @xl:pt-0", unread ? "font-medium text-ink" : "text-ink-3")}>{folder === "later" ? <span className="inline-flex items-center gap-1 text-pa-text"><Icon name="clock" className="size-3" />{fmtTime(m.snoozed_until!)}</span> : fmtShort(m.created_at)}</span>
             </button>
           </div>
         );

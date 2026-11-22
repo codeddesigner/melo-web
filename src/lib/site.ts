@@ -11,4 +11,11 @@ export const onBusinessHost = () => host() === "business.melo.to";
 export const personalHome = () => (onPersonalHost() ? "/" : "/personal");
 export const businessHome = () => (onPersonalHost() ? "/business" : "/");
 /* Personal sign-up: on melo.to plain /signup is personal; elsewhere it needs the flag */
-export const personalSignup = () => (onPersonalHost() ? "/signup" : "/signup?start=personal");
+export const personalSignup = () => (onPersonalHost() ? "/signup" : onBusinessHost() ? "https://melo.to/signup" : "/signup?start=personal");
+
+/* In the app, each front door is its own experience with its own sign-in:
+   melo.to shows only your Personal mail, business.melo.to only your business workspaces.
+   (Previews and localhost show every space, with a switcher.) */
+export type SpaceKind = "personal" | "business";
+export const appLock = (): SpaceKind | null => (onPersonalHost() ? "personal" : onBusinessHost() ? "business" : null);
+export const appUrl = (kind: SpaceKind, path = "/app/mail") => (kind === "personal" ? `https://melo.to${path}` : `https://business.melo.to${path}`);

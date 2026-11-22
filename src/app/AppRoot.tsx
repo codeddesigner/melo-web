@@ -7,6 +7,7 @@ import { Icon, type IconName } from "../components/icons";
 import { Avatar, Button, IconButton, Menu, Sheet, Spinner, useAsync } from "../components/ui";
 import { Ctx, useApp, type AppCtx } from "./context";
 import { SpaceSwitcher } from "./Spaces";
+import { appLock, appUrl, type SpaceKind } from "../lib/site";
 
 const loaders = {
   mail: () => import("./Mail"), team: () => import("./Team"), work: () => import("./Work"),
@@ -39,7 +40,10 @@ function Loaded() {
   const acct = useAsync<Account | null>(() => api.account(), []);
   const [wsId, setWsId] = useState<string | null>(savedWs);
   const account = acct.data;
-  const ws = account?.workspaces.find((w) => w.id === wsId) ?? account?.workspaces.find((w) => w.kind === "business") ?? account?.workspaces[0];
+  /* On melo.to only Personal; on business.melo.to only business workspaces */
+  const lock = appLock();
+  const spaces = account?.workspaces.filter((w) => !lock || w.kind === lock);
+  const ws = spaces?.find((w) => w.id === wsId) ?? spaces?.find((w) => w.kind === "business") ?? spaces?.[0];
   const personalWs = account?.workspaces.find((w) => w.kind === "personal");
   /* Point mail at this space's mailbox before anything below asks for it */
   if (ws) api.setMailScope(ws.id, ws.kind === "personal" || !personalWs);
@@ -67,13 +71,17 @@ function Loaded() {
     return () => clearInterval(t);
   }, [wsList]);
 
-  useEffect(() => { if (account && !account.workspaces.length) navigate("/signup?resume=1", { replace: true }); }, [account]);
+  /* Nothing to show on this site yet: set it up (Personal: claim an address; Business: create a workspace) */
+  useEffect(() => { if (account && spaces && !spaces.length) navigate(lock === "personal" ? "/signup" : "/signup?resume=1", { replace: true }); }, [account, spaces?.length, lock]); // eslint-disable-line
   useEffect(() => { if (ws) document.title = `${ws.name} — Melo`; }, [ws]);
 
   const switchWorkspace = useCallback((id: string) => {
+    const target = account?.workspaces.find((w) => w.id === id);
+    /* The other kind of space lives on its own site, with its own sign-in */
+    if (lock && target && target.kind !== lock) { location.assign(appUrl(target.kind as SpaceKind)); return; }
     try { localStorage.setItem(WS_KEY, id); } catch { /* ignore */ }
     setWsId(id); navigate("/app/mail");
-  }, []);
+  }, [account, lock]);
 
   const ctx = useMemo<AppCtx | null>(() => {
     if (!account || !ws) return null;
@@ -120,7 +128,7 @@ function Shell() {
   }, []);
   const view = section === "mail" ? <Mail /> : section === "team" ? <Team /> : section === "work" ? <Work /> : section === "calendar" ? <Calendar /> : section === "settings" ? <Settings /> : null;
   return (
-    <div className="melo-app flex h-dvh flex-col overflow-hidden bg-app md:flex-row">
+    <div className="melo-app app-shell flex h-dvh flex-col overflow-hidden bg-app md:flex-row">
       <Rail section={section} unreadTeam={ctx.unread.team} unreadMail={ctx.unread.mail ?? 0} />
       <main key={section} className="flex min-h-0 min-w-0 flex-1 flex-col animate-fade-in md:flex-row">
         <Suspense fallback={<div className="flex flex-1 items-center justify-center"><Spinner delay /></div>}>{view}</Suspense>

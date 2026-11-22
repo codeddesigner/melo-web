@@ -1,4 +1,4 @@
-import { businessHome } from "../lib/site";
+import { businessHome, personalSignup } from "../lib/site";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { Link, navigate, useLocation } from "../lib/router";
@@ -74,7 +74,7 @@ export default function Home() {
             {signedIn ? <Link className="btn btn-light btn-lg" to="/app">Visit workspace</Link> : <Link className="btn btn-light btn-lg" to="/signup">Get started — it’s free</Link>}
             <button type="button" className="btn btn-ghost btn-lg" onClick={() => setDemo(true)}>Book a demo</button>
           </div>
-          {!signedIn && <p className="hero-note">No work email? <Link to="/signup?start=personal" className="underline underline-offset-[3px]">Get a free @melo.to address</Link> · Works with Google Workspace &amp; Microsoft 365</p>}
+          {!signedIn && <p className="hero-note">No work email? <Link to={personalSignup()} className="underline underline-offset-[3px]">Get a free @melo.to address</Link> · Works with Google Workspace &amp; Microsoft 365</p>}
           <div className="hero-shot"><HeroInbox /></div>
         </section>
         <Features />

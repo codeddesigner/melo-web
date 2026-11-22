@@ -123,3 +123,21 @@
     transition-duration: 1ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* Phones: the app's type steps up a size so it reads comfortably at arm's length, and fields are 16px
+   so iOS doesn't zoom the page when you tap into them. (Unlayered, so it wins over the utility classes.) */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+@media (max-width: 767px) {
+  .app-shell { font-size: 15px; line-height: 21px; }
+  .app-shell .text-\[10px\] { font-size: 11px; }
+  .app-shell .text-\[11px\] { font-size: 12px; }
+  .app-shell .text-\[12px\], .app-shell .text-xs { font-size: 13px; line-height: 18px; }
+  .app-shell .text-\[13px\] { font-size: 15px; }
+  .app-shell .text-\[14px\], .app-shell .text-sm { font-size: 15px; line-height: 21px; }
+  .app-shell .text-\[15px\] { font-size: 16px; }
+  .app-shell input:not([type=checkbox]):not([type=radio]):not([type=range]), .app-shell textarea, .app-shell select, .app-shell [contenteditable=true] { font-size: 16px; }
+}
+/* Same for sign-in, sign-up and the demo form on phones */
+@media (max-width: 767px) {
+  .su-in input, .su-tokens input, .dlg-content input, .melo-app input:not([type=checkbox]):not([type=radio]):not([type=range]):not([maxlength="1"]), .melo-app textarea, .melo-app select { font-size: 16px; }
+}

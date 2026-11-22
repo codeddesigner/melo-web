@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { api, ApiError } from "../lib/api";
+import { personalSignup } from "../lib/site";
 import { Link, navigate, useLocation } from "../lib/router";
 import { useSession } from "../lib/session";
 import { isEmail } from "../lib/util";
@@ -30,7 +31,7 @@ export default function SignIn() {
   useEffect(() => { document.title = step === "password" ? "Enter your password — Melo" : step === "email" ? "Sign in — Melo" : "Check your email — Melo"; }, [step]);
   useEffect(() => { if (session && step === "email") navigate(next, { replace: true }); }, [session]); // eslint-disable-line
 
-  const noAccount = (v: string) => <>There’s no Melo account for {v} yet. <Link className="su-a" to={looksMelo(v) ? "/signup?start=personal" : `/signup?email=${encodeURIComponent(v)}`}>{looksMelo(v) ? "Create a Melo address" : "Create one with this email"}</Link></>;
+  const noAccount = (v: string) => <>There’s no Melo account for {v} yet. <Link className="su-a" to={looksMelo(v) ? personalSignup() : `/signup?email=${encodeURIComponent(v)}`}>{looksMelo(v) ? "Create a Melo address" : "Create one with this email"}</Link></>;
 
   const sendCode = async (v: string) => {
     const r = await api.sendCode(v, "signin"); setEmail(v); setSentTo(r.to || v); setCode(""); setStep("code");
@@ -95,7 +96,7 @@ export default function SignIn() {
         <Err msg={err} />
         <button className="su-btn dark" type="submit" disabled={busy}>{busy ? "Checking…" : "Continue"}</button>
       </form>
-      <p className="su-meta">New to Melo? <Link className="su-a" to="/signup">Create an account</Link> · <Link className="su-a" to="/signup?start=personal">Get a free @melo.to address</Link></p>
+      <p className="su-meta">New to Melo? <Link className="su-a" to="/signup">Create an account</Link> · <Link className="su-a" to={personalSignup()}>Get a free @melo.to address</Link></p>
     </AuthShell>
   );
 

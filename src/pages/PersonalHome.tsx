@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, navigate } from "../lib/router";
 import { useSession } from "../lib/session";
-import { businessHome, personalHome, personalSignup } from "../lib/site";
+import { businessHome, onBusinessHost, personalHome, personalSignup } from "../lib/site";
 import { cx } from "../lib/util";
 import { Icon, type IconName } from "../components/icons";
 import { useToast } from "../components/ui";
@@ -17,7 +17,7 @@ export default function PersonalHome() {
   const soon = (what: string) => toast(`${what} is coming soon`, "info");
   useEffect(() => { document.title = "Melo | Relatable Email for the modern world"; window.scrollTo(0, 0); }, []);
   usePersonalMotion();
-  const start = signedIn ? "/app" : personalSignup();
+  const start = onBusinessHost() ? personalSignup() : signedIn ? "/app" : personalSignup();
   const startLabel = signedIn ? "Open Melo" : "Get Melo free";
   return (
     <div className="melo-app bg-white text-ink">
